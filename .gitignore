@@ -2,3 +2,4 @@
 *.swo
 *.log
 *.o
+build/
