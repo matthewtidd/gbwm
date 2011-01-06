@@ -2,14 +2,19 @@
 #include <iostream>
 //#include <xcb/xcb_keysym.h>
 //#include <xcb/xcb_atom.h>
-//#include <xcb/xcb_icccm.h>
+#include <xcb/xcb_icccm.h>
 
 #include "config.h"
+#include "screen.h"
+#include "client.h"
 
 using namespace std;
 
-int setupscreen(xcb_connection_t *conn, xcb_screen_t *screen)
+int setupscreen()
 {
+	xcb_connection_t *conn = Screen::instance()->connection();
+	xcb_screen_t *screen = Screen::instance()->screen();
+	
 	xcb_query_tree_reply_t *reply;
 	xcb_query_pointer_reply_t *pointer;
 	int len;
@@ -24,7 +29,7 @@ int setupscreen(xcb_connection_t *conn, xcb_screen_t *screen)
 	}
 
 	len = xcb_query_tree_children_length(reply);
-	cout << "found " << len << " children";
+	cout << "found " << len << " children" << endl;
 	children = xcb_query_tree_children(reply);
 
 	for (int i = 0; i < len; i++) {
@@ -32,6 +37,10 @@ int setupscreen(xcb_connection_t *conn, xcb_screen_t *screen)
 		if (!attr) {
 			cout << "Couldn't get attributes for window " << children[i];
 			continue;
+		}
+
+		if (!attr->override_redirect && attr->map_state == XCB_MAP_STATE_VIEWABLE) {
+			new Client(children[i]);
 		}
 	}
 	xcb_flush(conn);
@@ -41,23 +50,42 @@ int setupscreen(xcb_connection_t *conn, xcb_screen_t *screen)
 int main(int /*argc*/, char** /*argv*/)
 {
 	xcb_connection_t *conn;
-	xcb_screen_t *screen;
 	xcb_drawable_t root;
+	xcb_screen_t *screen;
 
 	cout << "Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << endl;
+	new Screen();
 
-	conn = xcb_connect(NULL, NULL);
-	if (xcb_connection_has_error(conn)) {
-		cout << "xcb_connect error!";
-		return(1);
-	}
-
-	screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
+	conn = Screen::instance()->connection();
+	screen = Screen::instance()->screen();
 	root = screen->root;
 
 	cout << "Screen size: " << screen->width_in_pixels << "x" << screen->height_in_pixels << endl;
-	cout << "Root Window: " << screen->root << endl;
-	setupscreen(conn, screen);
+	cout << "Root Window: " << root << endl;
+	setupscreen();
+	cout << "Clients: " << Client::count() << endl;
+/*
+	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+	uint32_t values[2] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
+
+	xcb_window_t new_win = xcb_generate_id(conn);
+	xcb_create_window(conn,
+				XCB_COPY_FROM_PARENT,
+				new_win,
+				root,
+				50, 400,
+				100, 100,
+				10,
+				XCB_WINDOW_CLASS_INPUT_OUTPUT,
+				screen->root_visual,
+				mask, values);
+	xcb_map_window(conn, new_win);
+	*/
+	xcb_flush(conn);
+	for(;;) {
+		// do nothing
+	}
+	xcb_disconnect(conn);
 	return(0);
 }
 
