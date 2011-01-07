@@ -12,6 +12,9 @@
 
 using namespace std;
 
+#define CLIENT_TITLEBAR_FONT "Sans 8"
+#define CLIENT_TITLEBAR_HEIGHT 16
+
 class Client {
 	public:
 		Client(xcb_window_t win);

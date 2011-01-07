@@ -33,7 +33,7 @@ Client::Client(xcb_window_t win)
 	// SIZE HINTS
 	xcb_size_hints_t hints;
 	if (!xcb_get_wm_normal_hints_reply(conn, xcb_get_wm_normal_hints_unchecked(conn, win), &hints, NULL)) {
-		cout << "Couldn't get size hints." << endl;
+		cout << "ERROR: Couldn't get size hints." << endl;
 	}
 
 	// user specified geometry
@@ -50,10 +50,10 @@ Client::Client(xcb_window_t win)
 	uint8_t got_reply;
 	got_reply = xcb_get_wm_name_reply(conn, cookie, &prop, NULL);
 	if (!got_reply || prop.name_len == 0) {
-		cout << "no name!" << endl;
+		cout << "ERROR: No name for client" << endl;
 		_title = "(none)";
 	} else {
-		cout << "name = " << prop.name << endl;
+		cout << "DEBUG: Client Name = " << prop.name << endl;
 		_title = string(prop.name);
 	}
 	xcb_get_text_property_reply_wipe(&prop);
@@ -70,15 +70,15 @@ Client::~Client()
 
 void Client::debug()
 {
-	cout << "client = " << _id << endl;
-	cout << "  x = " << _x << endl;
-	cout << "  y = " << _y << endl;
-	cout << "  width = " << _width << endl;
-	cout << "  height = " << _height << endl;
-	cout << "  min_width = " << _min_width << endl;
-	cout << "  min_height = " << _min_height << endl;
-	cout << "  max_width = " << _max_width << endl;
-	cout << "  max_height = " << _max_height << endl;
+	cout << "DEBUG: client = " << _id << endl;
+	cout << "DEBUG:   x = " << _x << endl;
+	cout << "DEBUG:   y = " << _y << endl;
+	cout << "DEBUG:   width = " << _width << endl;
+	cout << "DEBUG:   height = " << _height << endl;
+	cout << "DEBUG:   min_width = " << _min_width << endl;
+	cout << "DEBUG:   min_height = " << _min_height << endl;
+	cout << "DEBUG:   max_width = " << _max_width << endl;
+	cout << "DEBUG:   max_height = " << _max_height << endl;
 }
 
 int Client::count()
@@ -88,7 +88,7 @@ int Client::count()
 
 void Client::setupTitlebar()
 {
-	int titlebar_height = 16;
+	int titlebar_height = CLIENT_TITLEBAR_HEIGHT;
 	int titlebar_width = _width;
 
 	xcb_connection_t *conn = Screen::instance()->connection();
@@ -116,49 +116,18 @@ void Client::setupTitlebar()
 	cairo_rectangle(cr, 0.0, 0.0, titlebar_width, titlebar_height);
 	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
 	cairo_fill(cr);
+
+	// nice couple pixel padding between the text and the edge
 	cairo_move_to(cr, 2.0, 2.0);
 	
 	PangoLayout *layout = pango_cairo_create_layout(cr);
 	pango_layout_set_text(layout, _title.c_str(), (int)_title.size());
-	//pango_layout_set_width(layout, pango_units_from_double(100.0));
-	//pango_layout_set_height(layout, pango_units_from_double(21.0));
-	//pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-	//pango_layout_set_wrap(layout, PANGO_WRAP_WORD);
-	PangoFontDescription *font_description = pango_font_description_from_string("sans 8");
+	PangoFontDescription *font_description = pango_font_description_from_string(CLIENT_TITLEBAR_FONT);
 	pango_layout_set_font_description(layout, font_description);
 	pango_font_description_free(font_description);
-
-	int height = 0;
-	int width = 0;
-	
-	cairo_save(cr);
 	cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
-	pango_cairo_update_layout(cr, layout);
-	pango_layout_get_size(layout, &width, &height);
-	cout << "pango size = " << width << "x" << height << endl;
-
 	pango_cairo_show_layout(cr, layout);
-	cairo_restore(cr);
 
 	cairo_destroy(cr);
-
-/*
-	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_EVENT_MASK_EXPOSURE;
-	uint32_t values[2] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
-
-	_titlebar = xcb_generate_id(conn);
-	xcb_create_window(conn,
-				XCB_COPY_FROM_PARENT,
-				_titlebar,
-				screen->root,
-				20, 500,
-				100, 21,
-				10,
-				XCB_WINDOW_CLASS_INPUT_OUTPUT,
-				screen->root_visual,
-				mask, values);
-	xcb_map_window(conn, _titlebar);
-
-	*/
 	xcb_flush(conn);
 }
