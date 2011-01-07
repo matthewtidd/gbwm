@@ -83,6 +83,7 @@ int main(int /*argc*/, char** /*argv*/)
 	*/
 	xcb_flush(conn);
 	for(;;) {
+		sleep(5);
 		// do nothing
 	}
 	xcb_disconnect(conn);

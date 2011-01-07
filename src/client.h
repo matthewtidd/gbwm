@@ -7,6 +7,7 @@
 #include <pango/pangocairo.h>
 #include <iostream>
 #include <list>
+#include <string>
 #include "draw_context.h"
 
 using namespace std;
@@ -31,6 +32,7 @@ class Client {
 		uint32_t _max_height;		// ...
 		xcb_window_t _titlebar;
 		DrawContext *_draw;
+		string _title;
 
 		void setupTitlebar();
 		static list<Client*> _clients;
