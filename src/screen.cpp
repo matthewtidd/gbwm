@@ -8,7 +8,7 @@ Screen::Screen()
 	_screen = 0;
 	_connection_error = false;
 
-	_conn = xcb_connect(NULL, NULL);
+	_conn = xcb_connect(":2", NULL);
 	if (xcb_connection_has_error(_conn)) {
 		cout << "xcb_connect error!";
 		_connection_error = true;

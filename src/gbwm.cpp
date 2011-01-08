@@ -3,6 +3,8 @@
 //#include <xcb/xcb_keysym.h>
 //#include <xcb/xcb_atom.h>
 #include <xcb/xcb_icccm.h>
+#include <stdlib.h>
+#include <list>
 
 #include "config.h"
 #include "screen.h"
@@ -47,11 +49,27 @@ int setupscreen()
 	return(0);
 }
 
+void SignalHandler(int signal_number)
+{
+	cout << "DEBUG: signal SIGTERM" << endl;
+	list<Client *> clients = Client::clients();
+	list<Client *>::iterator iter;
+	for (iter = clients.begin(); iter != clients.end(); iter++) {
+		Client *c = (Client *)*iter;
+		c->revert();
+	}
+	clients.clear();
+	exit(1);
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
 	xcb_connection_t *conn;
 	xcb_drawable_t root;
 	xcb_screen_t *screen;
+
+	// SIGNALS
+	signal(SIGTERM, SignalHandler);
 
 	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << endl;
 	new Screen();

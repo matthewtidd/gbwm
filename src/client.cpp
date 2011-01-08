@@ -58,6 +58,7 @@ Client::Client(xcb_window_t win)
 	}
 	xcb_get_text_property_reply_wipe(&prop);
 
+	setupFrame();
 	setupTitlebar();
 	debug();
 
@@ -66,6 +67,13 @@ Client::Client(xcb_window_t win)
 
 Client::~Client()
 {
+}
+
+void Client::revert()
+{
+	cout << "attempting to reparent..." << endl;
+	xcb_reparent_window(Screen::instance()->connection(), _id, Screen::instance()->screen()->root, _x, _y);
+	cout << "done reparenting..." << endl;
 }
 
 void Client::debug()
@@ -86,48 +94,75 @@ int Client::count()
 	return((int)_clients.size());
 }
 
+list<Client *> Client::clients()
+{
+	return(_clients);
+}
+
 void Client::setupTitlebar()
 {
-	int titlebar_height = CLIENT_TITLEBAR_HEIGHT;
-	int titlebar_width = _width;
+	drawText(_title.c_str(), _frame, 0, 0, _width, 16);
 
 	xcb_connection_t *conn = Screen::instance()->connection();
 	xcb_screen_t *screen = Screen::instance()->screen();
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	uint32_t values[2] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 
-	xcb_window_t _titlebar = xcb_generate_id(conn);
+	_titlebar = xcb_generate_id(conn);
 	xcb_create_window(conn,
 				XCB_COPY_FROM_PARENT,
 				_titlebar,
-				screen->root,
-				_x, _y - titlebar_height,
-				titlebar_width, titlebar_height,
+				_frame,
+				_x, _y,
+				_width, CLIENT_TITLEBAR_HEIGHT,
 				0,
 				XCB_WINDOW_CLASS_INPUT_OUTPUT,
 				screen->root_visual,
-				mask, values);
+				CLIENT_WINDOW_MASK, values);
 	xcb_map_window(conn, _titlebar);
+	drawText(_title.c_str(), _titlebar, 2, 2, _width, CLIENT_TITLEBAR_HEIGHT);
+	xcb_flush(conn);
+}
 
+void Client::setupFrame()
+{
+	xcb_connection_t *conn = Screen::instance()->connection();
+	xcb_screen_t *screen = Screen::instance()->screen();
+	uint32_t values[2] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
+
+	_frame = xcb_generate_id(conn);
+	xcb_create_window(conn,
+				XCB_COPY_FROM_PARENT,
+				_frame,
+				screen->root,
+				_x, _y - CLIENT_TITLEBAR_HEIGHT,
+				_width, _height + CLIENT_TITLEBAR_HEIGHT,
+				1,
+				XCB_WINDOW_CLASS_INPUT_OUTPUT,
+				screen->root_visual,
+				CLIENT_WINDOW_MASK, values);
+	xcb_map_window(conn, _frame);
+	//drawText("test text", _frame, 0, 0, 100, 16);
+	xcb_reparent_window(conn, _id, _frame, 0, CLIENT_TITLEBAR_HEIGHT);
+}
+
+void Client::drawText(const char * str, xcb_window_t win, int x, int y, int w, int h)
+{
+	xcb_connection_t *conn = Screen::instance()->connection();
+	xcb_screen_t *screen = Screen::instance()->screen();
 	xcb_visualtype_t *visual = draw_screen_default_visual(screen);
-	cairo_surface_t *surface = cairo_xcb_surface_create(conn, _titlebar, visual, titlebar_width, titlebar_height);
+	cairo_surface_t *surface = cairo_xcb_surface_create(conn, win, visual, w, h);
 	cairo_t *cr = cairo_create(surface);
 
-	cairo_rectangle(cr, 0.0, 0.0, titlebar_width, titlebar_height);
-	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
-	cairo_fill(cr);
-
 	// nice couple pixel padding between the text and the edge
-	cairo_move_to(cr, 2.0, 2.0);
+	cairo_move_to(cr, (double)x, (double)y);
 	
 	PangoLayout *layout = pango_cairo_create_layout(cr);
-	pango_layout_set_text(layout, _title.c_str(), (int)_title.size());
+	pango_layout_set_text(layout, str, -1);
 	PangoFontDescription *font_description = pango_font_description_from_string(CLIENT_TITLEBAR_FONT);
 	pango_layout_set_font_description(layout, font_description);
 	pango_font_description_free(font_description);
 	cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
 	pango_cairo_show_layout(cr, layout);
-
 	cairo_destroy(cr);
-	xcb_flush(conn);
 }

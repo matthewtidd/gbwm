@@ -14,6 +14,7 @@ using namespace std;
 
 #define CLIENT_TITLEBAR_FONT "Sans 8"
 #define CLIENT_TITLEBAR_HEIGHT 16
+#define CLIENT_WINDOW_MASK XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK
 
 class Client {
 	public:
@@ -22,6 +23,9 @@ class Client {
 
 		void debug();
 		static int count();
+		static list<Client *> clients();
+
+		void revert();
 
 	private:
 		xcb_drawable_t _id;
@@ -34,10 +38,13 @@ class Client {
 		uint32_t _max_width;		// ...
 		uint32_t _max_height;		// ...
 		xcb_window_t _titlebar;
+		xcb_window_t _frame;
 		DrawContext *_draw;
 		string _title;
 
 		void setupTitlebar();
+		void setupFrame();
+		void drawText(const char * str, xcb_window_t win, int x, int y, int w, int h);
 		static list<Client*> _clients;
 
 };
