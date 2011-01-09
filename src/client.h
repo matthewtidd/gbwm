@@ -3,6 +3,7 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
+#include <xcb/xcb_atom.h>
 #include <cairo/cairo-xcb.h>
 #include <pango/pangocairo.h>
 #include <iostream>
@@ -24,8 +25,11 @@ class Client {
 		void debug();
 		static int count();
 		static list<Client *> clients();
+		static Client * getByWindow(xcb_window_t window);
 
 		void revert();
+
+		xcb_window_t window() const;
 
 	private:
 		xcb_drawable_t _id;
@@ -42,10 +46,17 @@ class Client {
 		DrawContext *_draw;
 		string _title;
 
+		xcb_event_handlers_t _evenths;
+		xcb_property_handlers_t _prophs;
+
 		void setupTitlebar();
 		void setupFrame();
+		void setupEvents();
 		void drawText(const char * str, xcb_window_t win, int x, int y, int w, int h);
 		static list<Client*> _clients;
+		static xcb_visualtype_t *_visual;
+		static xcb_connection_t *_conn;
+		static xcb_screen_t *_screen;
 
 };
 

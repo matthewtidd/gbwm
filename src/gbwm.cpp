@@ -69,7 +69,19 @@ int main(int /*argc*/, char** /*argv*/)
 	xcb_screen_t *screen;
 
 	// SIGNALS
+	signal(SIGALRM, SignalHandler);
+	signal(SIGHUP, SignalHandler);
+	signal(SIGINT, SignalHandler);
+	signal(SIGKILL, SignalHandler);
+	signal(SIGPIPE, SignalHandler);
+	signal(SIGPOLL, SignalHandler);
+	signal(SIGPROF, SignalHandler);
 	signal(SIGTERM, SignalHandler);
+	signal(SIGUSR1, SignalHandler);
+	signal(SIGUSR2, SignalHandler);
+	signal(SIGVTALRM, SignalHandler);
+	signal(SIGSTKFLT, SignalHandler);
+	signal(SIGQUIT, SignalHandler);
 
 	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << endl;
 	new Screen();
@@ -80,9 +92,20 @@ int main(int /*argc*/, char** /*argv*/)
 	cout << "INFO: Screen size: " << screen->width_in_pixels << "x" << screen->height_in_pixels << endl;
 	setupscreen();
 	xcb_flush(conn);
-	for(;;) {
-		sleep(5);
-		// do nothing
+	xcb_generic_event_t *event;
+	while (event = xcb_wait_for_event(conn)) {
+		switch (event->response_type & ~0x80) {
+			case XCB_EXPOSE:
+				cout << "EVENT: XCB_EXPOSE" << endl;
+				break;
+			case XCB_BUTTON_PRESS:
+				cout << "EVENT: XCB_BUTTON_PRESS" << endl;
+				break;
+			default:
+				cout << "EVENT: " << event->response_type << endl;
+				break;
+		}
+		free(event);
 	}
 	xcb_disconnect(conn);
 	return(0);

@@ -3,10 +3,47 @@
 #include <malloc.h>
 
 list<Client *> Client::_clients;
+xcb_visualtype_t* Client::_visual = 0;
+xcb_connection_t* Client::_conn = 0;
+xcb_screen_t* Client::_screen = 0;
+/*
+static int property_handle_wm_name(void *data, xcb_connection_t *connection, uint8_t state, xcb_window_t window, xcb_atom_t name, xcb_get_property_reply_t *reply)
+{
+	cout << "property_handle_wm_name" << endl;
+	Client *c = Client::getByWindow(window);
+	if (c) {
+		xcb_connection_t *_conn = Screen::instance()->connection();
+		xcb_get_text_property_reply_t prop;
+		xcb_get_property_cookie_t cookie = xcb_get_wm_name(_conn, c->window());
+		uint8_t got_reply;
+		got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
+		if (!got_reply || prop.name_len == 0) {
+			cout << "ERROR: No name for client" << endl;
+		} else {
+			cout << "DEBUG: Client Name = " << prop.name << endl;
+		}
+		xcb_get_text_property_reply_wipe(&prop);
+		bool no_reply = !reply;
+		/*
+		if (no_reply) {
+			reply = xcb_get_property_reply(conn, xcb_get_any_property(conn, false, c->window(), WM_NAME, UINT_MAX), NULL);
+		}
+		cout << xutil_get_text_property_from_reply(reply) << endl;
+	}
+}*/
 
 Client::Client(xcb_window_t win)
 {
-	xcb_connection_t *conn = Screen::instance()->connection();
+	if (_conn == 0) {
+		_conn = Screen::instance()->connection();
+	}
+	if (_screen == 0) {
+		_screen = Screen::instance()->screen();
+	}
+	if (_visual == 0) {
+		_visual = draw_screen_default_visual(_screen);
+	}
+	//setupEvents();
 
 	_id = win;
 	_x = 0;
@@ -15,8 +52,8 @@ Client::Client(xcb_window_t win)
 	_height = 0;
 
 	// GEOMETRY
-	xcb_get_geometry_cookie_t geomCookie = xcb_get_geometry(conn, win);
-	xcb_get_geometry_reply_t *geometry = xcb_get_geometry_reply(conn, geomCookie, NULL);
+	xcb_get_geometry_cookie_t geomCookie = xcb_get_geometry(_conn, win);
+	xcb_get_geometry_reply_t *geometry = xcb_get_geometry_reply(_conn, geomCookie, NULL);
 	if (geometry) {
 		_x = geometry->x;
 		_y = geometry->y;
@@ -27,12 +64,12 @@ Client::Client(xcb_window_t win)
 
 	_min_width = 0;
 	_min_height = 0;
-	_max_width = Screen::instance()->screen()->width_in_pixels;
-	_max_height = Screen::instance()->screen()->height_in_pixels;
+	_max_width = _screen->width_in_pixels;
+	_max_height = _screen->height_in_pixels;
 
 	// SIZE HINTS
 	xcb_size_hints_t hints;
-	if (!xcb_get_wm_normal_hints_reply(conn, xcb_get_wm_normal_hints_unchecked(conn, win), &hints, NULL)) {
+	if (!xcb_get_wm_normal_hints_reply(_conn, xcb_get_wm_normal_hints_unchecked(_conn, win), &hints, NULL)) {
 		cout << "ERROR: Couldn't get size hints." << endl;
 	}
 
@@ -46,9 +83,9 @@ Client::Client(xcb_window_t win)
 
 	// TITLE
 	xcb_get_text_property_reply_t prop;
-	xcb_get_property_cookie_t cookie = xcb_get_wm_name(conn, _id);
+	xcb_get_property_cookie_t cookie = xcb_get_wm_name(_conn, _id);
 	uint8_t got_reply;
-	got_reply = xcb_get_wm_name_reply(conn, cookie, &prop, NULL);
+	got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
 	if (!got_reply || prop.name_len == 0) {
 		cout << "ERROR: No name for client" << endl;
 		_title = "(none)";
@@ -69,11 +106,33 @@ Client::~Client()
 {
 }
 
+Client *Client::getByWindow(xcb_window_t window)
+{
+	list<Client *> clients = Client::clients();
+	list<Client *>::iterator iter;
+	for (iter = clients.begin(); iter != clients.end(); iter++) {
+		Client *c = (Client *)*iter;
+		if (c->_id == window) {
+			return(c);
+		}
+	}
+	return(NULL);
+}
 void Client::revert()
 {
 	cout << "attempting to reparent..." << endl;
-	xcb_reparent_window(Screen::instance()->connection(), _id, Screen::instance()->screen()->root, _x, _y);
+	xcb_reparent_window(_conn, _id, _screen->root, _x, _y);
+	uint32_t values[1] = {1};
+	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
+	xcb_destroy_window(_conn, _titlebar);
+	xcb_destroy_window(_conn, _frame);
+	xcb_flush(_conn);
 	cout << "done reparenting..." << endl;
+}
+
+xcb_window_t Client::window() const
+{
+	return(_id);
 }
 
 void Client::debug()
@@ -101,61 +160,80 @@ list<Client *> Client::clients()
 
 void Client::setupTitlebar()
 {
-	drawText(_title.c_str(), _frame, 0, 0, _width, 16);
-
-	xcb_connection_t *conn = Screen::instance()->connection();
-	xcb_screen_t *screen = Screen::instance()->screen();
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-	uint32_t values[2] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
+	uint32_t values[2] = {_screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 
-	_titlebar = xcb_generate_id(conn);
-	xcb_create_window(conn,
+	_titlebar = xcb_generate_id(_conn);
+	xcb_create_window(_conn,
 				XCB_COPY_FROM_PARENT,
 				_titlebar,
 				_frame,
-				_x, _y,
+				0, 0,
 				_width, CLIENT_TITLEBAR_HEIGHT,
 				0,
 				XCB_WINDOW_CLASS_INPUT_OUTPUT,
-				screen->root_visual,
+				_screen->root_visual,
 				CLIENT_WINDOW_MASK, values);
-	xcb_map_window(conn, _titlebar);
-	drawText(_title.c_str(), _titlebar, 2, 2, _width, CLIENT_TITLEBAR_HEIGHT);
-	xcb_flush(conn);
+	xcb_map_window(_conn, _titlebar);
+
+	// fill the background
+	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, _titlebar, _visual, _width, CLIENT_TITLEBAR_HEIGHT);
+	cairo_t *cr = cairo_create(surface);
+	cairo_rectangle(cr, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT);
+	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
+	cairo_fill(cr);
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	cairo_set_line_width(cr, 1.0);
+	cairo_move_to(cr, 0.0, CLIENT_TITLEBAR_HEIGHT);
+	cairo_line_to(cr, _width, CLIENT_TITLEBAR_HEIGHT);
+	cairo_stroke(cr);
+	cairo_destroy(cr);
+
+	// nice couple pixel padding between the text and the edge
+	drawText(_title.c_str(), _titlebar, 2, 2, _width - (CLIENT_TITLEBAR_HEIGHT + 4), CLIENT_TITLEBAR_HEIGHT);
+	xcb_flush(_conn);
 }
 
 void Client::setupFrame()
 {
-	xcb_connection_t *conn = Screen::instance()->connection();
-	xcb_screen_t *screen = Screen::instance()->screen();
-	uint32_t values[2] = {screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
+	uint32_t values[3] = {_screen->white_pixel, _screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
+	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
 
-	_frame = xcb_generate_id(conn);
-	xcb_create_window(conn,
+	_frame = xcb_generate_id(_conn);
+	xcb_create_window(_conn,
 				XCB_COPY_FROM_PARENT,
 				_frame,
-				screen->root,
-				_x, _y - CLIENT_TITLEBAR_HEIGHT,
+				_screen->root,
+				_x, _y,
 				_width, _height + CLIENT_TITLEBAR_HEIGHT,
 				1,
 				XCB_WINDOW_CLASS_INPUT_OUTPUT,
-				screen->root_visual,
-				CLIENT_WINDOW_MASK, values);
-	xcb_map_window(conn, _frame);
-	//drawText("test text", _frame, 0, 0, 100, 16);
-	xcb_reparent_window(conn, _id, _frame, 0, CLIENT_TITLEBAR_HEIGHT);
+				_screen->root_visual,
+				mask, values);
+	xcb_map_window(_conn, _frame);
+	xcb_reparent_window(_conn, _id, _frame, 0, CLIENT_TITLEBAR_HEIGHT);
+	xcb_flush(_conn);
+
+	// remove the border
+	uint32_t move_values[1] = { 0 };
+	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
+
+	xcb_flush(_conn);
+}
+
+void Client::setupEvents()
+{
+//	xcb_property_handlers_init(&_prophs, &_evenths);
+//	xcb_property_set_handler(&_prophs, WM_NAME, UINT_MAX, property_handle_wm_name, NULL);
 }
 
 void Client::drawText(const char * str, xcb_window_t win, int x, int y, int w, int h)
 {
-	xcb_connection_t *conn = Screen::instance()->connection();
-	xcb_screen_t *screen = Screen::instance()->screen();
-	xcb_visualtype_t *visual = draw_screen_default_visual(screen);
-	cairo_surface_t *surface = cairo_xcb_surface_create(conn, win, visual, w, h);
+	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, win, _visual, w, h);
 	cairo_t *cr = cairo_create(surface);
 
 	// nice couple pixel padding between the text and the edge
-	cairo_move_to(cr, (double)x, (double)y);
+	cairo_move_to(cr, 2, 2);
 	
 	PangoLayout *layout = pango_cairo_create_layout(cr);
 	pango_layout_set_text(layout, str, -1);
