@@ -46,12 +46,8 @@ class Client {
 		DrawContext *_draw;
 		string _title;
 
-		xcb_event_handlers_t _evenths;
-		xcb_property_handlers_t _prophs;
-
 		void setupTitlebar();
 		void setupFrame();
-		void setupEvents();
 		void drawText(const char * str, xcb_window_t win, int x, int y, int w, int h);
 		static list<Client*> _clients;
 		static xcb_visualtype_t *_visual;

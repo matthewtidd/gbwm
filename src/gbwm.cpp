@@ -9,6 +9,7 @@
 #include "config.h"
 #include "screen.h"
 #include "client.h"
+#include "event.h"
 
 using namespace std;
 
@@ -65,8 +66,8 @@ void SignalHandler(int signal_number)
 int main(int /*argc*/, char** /*argv*/)
 {
 	xcb_connection_t *conn;
-	xcb_drawable_t root;
 	xcb_screen_t *screen;
+	Event *event;
 
 	// SIGNALS
 	signal(SIGALRM, SignalHandler);
@@ -85,6 +86,7 @@ int main(int /*argc*/, char** /*argv*/)
 
 	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << endl;
 	new Screen();
+	event = new Event();
 
 	conn = Screen::instance()->connection();
 	screen = Screen::instance()->screen();
@@ -92,20 +94,23 @@ int main(int /*argc*/, char** /*argv*/)
 	cout << "INFO: Screen size: " << screen->width_in_pixels << "x" << screen->height_in_pixels << endl;
 	setupscreen();
 	xcb_flush(conn);
-	xcb_generic_event_t *event;
-	while (event = xcb_wait_for_event(conn)) {
-		switch (event->response_type & ~0x80) {
+	xcb_generic_event_t *_event;
+	while (_event = xcb_wait_for_event(conn)) {
+		switch (_event->response_type & ~0x80) {
 			case XCB_EXPOSE:
 				cout << "EVENT: XCB_EXPOSE" << endl;
 				break;
 			case XCB_BUTTON_PRESS:
 				cout << "EVENT: XCB_BUTTON_PRESS" << endl;
 				break;
+			case XCB_BUTTON_RELEASE:
+				cout << "EVENT: XCB_BUTTON_RELEASE" << endl;
+				break;
 			default:
-				cout << "EVENT: " << event->response_type << endl;
+				cout << "EVENT: " << (int)(_event->response_type & ~0x80) << endl;
 				break;
 		}
-		free(event);
+		free(_event);
 	}
 	xcb_disconnect(conn);
 	return(0);

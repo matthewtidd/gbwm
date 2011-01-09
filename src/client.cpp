@@ -6,31 +6,6 @@ list<Client *> Client::_clients;
 xcb_visualtype_t* Client::_visual = 0;
 xcb_connection_t* Client::_conn = 0;
 xcb_screen_t* Client::_screen = 0;
-/*
-static int property_handle_wm_name(void *data, xcb_connection_t *connection, uint8_t state, xcb_window_t window, xcb_atom_t name, xcb_get_property_reply_t *reply)
-{
-	cout << "property_handle_wm_name" << endl;
-	Client *c = Client::getByWindow(window);
-	if (c) {
-		xcb_connection_t *_conn = Screen::instance()->connection();
-		xcb_get_text_property_reply_t prop;
-		xcb_get_property_cookie_t cookie = xcb_get_wm_name(_conn, c->window());
-		uint8_t got_reply;
-		got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
-		if (!got_reply || prop.name_len == 0) {
-			cout << "ERROR: No name for client" << endl;
-		} else {
-			cout << "DEBUG: Client Name = " << prop.name << endl;
-		}
-		xcb_get_text_property_reply_wipe(&prop);
-		bool no_reply = !reply;
-		/*
-		if (no_reply) {
-			reply = xcb_get_property_reply(conn, xcb_get_any_property(conn, false, c->window(), WM_NAME, UINT_MAX), NULL);
-		}
-		cout << xutil_get_text_property_from_reply(reply) << endl;
-	}
-}*/
 
 Client::Client(xcb_window_t win)
 {
@@ -43,7 +18,6 @@ Client::Client(xcb_window_t win)
 	if (_visual == 0) {
 		_visual = draw_screen_default_visual(_screen);
 	}
-	//setupEvents();
 
 	_id = win;
 	_x = 0;
@@ -219,12 +193,6 @@ void Client::setupFrame()
 	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
 
 	xcb_flush(_conn);
-}
-
-void Client::setupEvents()
-{
-//	xcb_property_handlers_init(&_prophs, &_evenths);
-//	xcb_property_set_handler(&_prophs, WM_NAME, UINT_MAX, property_handle_wm_name, NULL);
 }
 
 void Client::drawText(const char * str, xcb_window_t win, int x, int y, int w, int h)
