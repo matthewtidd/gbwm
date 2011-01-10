@@ -100,11 +100,26 @@ int main(int /*argc*/, char** /*argv*/)
 			case XCB_EXPOSE:
 				cout << "EVENT: XCB_EXPOSE" << endl;
 				break;
+			case XCB_KEY_PRESS:
+				cout << "EVENT: XCB_KEY_PRESS" << endl;
+				break;
+			case XCB_KEY_RELEASE:
+				cout << "EVENT: XCB_KEY_RELEASE" << endl;
+				break;
 			case XCB_BUTTON_PRESS:
 				cout << "EVENT: XCB_BUTTON_PRESS" << endl;
 				break;
 			case XCB_BUTTON_RELEASE:
 				cout << "EVENT: XCB_BUTTON_RELEASE" << endl;
+				break;
+			case XCB_ENTER_NOTIFY:
+				cout << "EVENT: XCB_ENTER_NOTIFY" << endl;
+				break;
+			case XCB_LEAVE_NOTIFY:
+				cout << "EVENT: XCB_LEAVE_NOTIFY" << endl;
+				break;
+			case XCB_PROPERTY_NOTIFY:
+				cout << "EVENT: XCB_PROPERTY_NOTIFY" << endl;
 				break;
 			default:
 				cout << "EVENT: " << (int)(_event->response_type & ~0x80) << endl;
