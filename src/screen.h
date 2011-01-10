@@ -8,7 +8,7 @@ using namespace std;
 
 class Screen {
 	public:
-		Screen();
+		Screen(char * dsp);
 		~Screen();
 
 		static Screen* instance();

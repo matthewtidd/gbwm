@@ -52,7 +52,7 @@ int setupscreen()
 
 void SignalHandler(int signal_number)
 {
-	cout << "DEBUG: signal SIGTERM" << endl;
+	cout << "DEBUG: signal " << signal_number << endl;
 	list<Client *> clients = Client::clients();
 	list<Client *>::iterator iter;
 	for (iter = clients.begin(); iter != clients.end(); iter++) {
@@ -60,10 +60,10 @@ void SignalHandler(int signal_number)
 		c->revert();
 	}
 	clients.clear();
-	exit(1);
+	exit(signal_number);
 }
 
-int main(int /*argc*/, char** /*argv*/)
+int main(int argc, char** argv)
 {
 	xcb_connection_t *conn;
 	xcb_screen_t *screen;
@@ -85,7 +85,11 @@ int main(int /*argc*/, char** /*argv*/)
 	signal(SIGQUIT, SignalHandler);
 
 	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << endl;
-	new Screen();
+	if (argc == 2) {
+		new Screen(argv[1]);
+	} else {
+		new Screen(0);
+	}
 	event = new Event();
 
 	conn = Screen::instance()->connection();
@@ -94,40 +98,14 @@ int main(int /*argc*/, char** /*argv*/)
 	cout << "INFO: Screen size: " << screen->width_in_pixels << "x" << screen->height_in_pixels << endl;
 	setupscreen();
 	xcb_flush(conn);
-	xcb_generic_event_t *_event;
-	while (_event = xcb_wait_for_event(conn)) {
-		switch (_event->response_type & ~0x80) {
-			case XCB_EXPOSE:
-				cout << "EVENT: XCB_EXPOSE" << endl;
-				break;
-			case XCB_KEY_PRESS:
-				cout << "EVENT: XCB_KEY_PRESS" << endl;
-				break;
-			case XCB_KEY_RELEASE:
-				cout << "EVENT: XCB_KEY_RELEASE" << endl;
-				break;
-			case XCB_BUTTON_PRESS:
-				cout << "EVENT: XCB_BUTTON_PRESS" << endl;
-				break;
-			case XCB_BUTTON_RELEASE:
-				cout << "EVENT: XCB_BUTTON_RELEASE" << endl;
-				break;
-			case XCB_ENTER_NOTIFY:
-				cout << "EVENT: XCB_ENTER_NOTIFY" << endl;
-				break;
-			case XCB_LEAVE_NOTIFY:
-				cout << "EVENT: XCB_LEAVE_NOTIFY" << endl;
-				break;
-			case XCB_PROPERTY_NOTIFY:
-				cout << "EVENT: XCB_PROPERTY_NOTIFY" << endl;
-				break;
-			default:
-				cout << "EVENT: " << (int)(_event->response_type & ~0x80) << endl;
-				break;
-		}
-		free(_event);
-	}
+
+	// run the event loop
+	event->loop();
+
 	xcb_disconnect(conn);
+	SignalHandler(0);
+
+	// won't reach here
 	return(0);
 }
 

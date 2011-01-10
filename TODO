@@ -1,0 +1,7 @@
+- xcb_render_composite - draw transparent frames and corners for all windows
+- log levels
+	- convert all output to logging functions
+- moving windows around by dragging titlebar
+- titlebar buttons (min, max, close)
+- update titlebars
+- new windows

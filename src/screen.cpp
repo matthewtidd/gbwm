@@ -2,13 +2,13 @@
 
 Screen * Screen::_instance = 0;
 
-Screen::Screen()
+Screen::Screen(char * dsp)
 {
 	_conn = 0;
 	_screen = 0;
 	_connection_error = false;
 
-	_conn = xcb_connect(":2", NULL);
+	_conn = xcb_connect(dsp, NULL);
 	if (xcb_connection_has_error(_conn)) {
 		cout << "xcb_connect error!";
 		_connection_error = true;

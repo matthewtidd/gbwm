@@ -10,12 +10,12 @@
 #include <list>
 #include <string>
 #include "draw_context.h"
+#include "window.h"
 
 using namespace std;
 
 #define CLIENT_TITLEBAR_FONT "Sans 8"
 #define CLIENT_TITLEBAR_HEIGHT 16
-#define CLIENT_WINDOW_MASK XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK
 
 class Client {
 	public:
@@ -41,14 +41,13 @@ class Client {
 		uint32_t _min_height;		// ...
 		uint32_t _max_width;		// ...
 		uint32_t _max_height;		// ...
-		xcb_window_t _titlebar;
-		xcb_window_t _frame;
-		DrawContext *_draw;
+		Window *_titlebar;
+		Window *_frame;
 		string _title;
 
 		void setupTitlebar();
 		void setupFrame();
-		void drawText(const char * str, xcb_window_t win, int x, int y, int w, int h);
+		void drawText(const char * str, Window *win, int x, int y, int w, int h);
 		static list<Client*> _clients;
 		static xcb_visualtype_t *_visual;
 		static xcb_connection_t *_conn;

@@ -98,8 +98,8 @@ void Client::revert()
 	xcb_reparent_window(_conn, _id, _screen->root, _x, _y);
 	uint32_t values[1] = {1};
 	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
-	xcb_destroy_window(_conn, _titlebar);
-	xcb_destroy_window(_conn, _frame);
+	delete(_titlebar);
+	delete(_frame);
 	xcb_flush(_conn);
 	cout << "done reparenting..." << endl;
 }
@@ -137,21 +137,10 @@ void Client::setupTitlebar()
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	uint32_t values[2] = {_screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 
-	_titlebar = xcb_generate_id(_conn);
-	xcb_create_window(_conn,
-				XCB_COPY_FROM_PARENT,
-				_titlebar,
-				_frame,
-				0, 0,
-				_width, CLIENT_TITLEBAR_HEIGHT,
-				0,
-				XCB_WINDOW_CLASS_INPUT_OUTPUT,
-				_screen->root_visual,
-				CLIENT_WINDOW_MASK, values);
-	xcb_map_window(_conn, _titlebar);
+	_titlebar = new Window(_frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
 
 	// fill the background
-	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, _titlebar, _visual, _width, CLIENT_TITLEBAR_HEIGHT);
+	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, _titlebar->id(), _visual, _width, CLIENT_TITLEBAR_HEIGHT);
 	cairo_t *cr = cairo_create(surface);
 	cairo_rectangle(cr, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT);
 	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
@@ -173,19 +162,9 @@ void Client::setupFrame()
 	uint32_t values[3] = {_screen->white_pixel, _screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
 
-	_frame = xcb_generate_id(_conn);
-	xcb_create_window(_conn,
-				XCB_COPY_FROM_PARENT,
-				_frame,
-				_screen->root,
-				_x, _y,
-				_width, _height + CLIENT_TITLEBAR_HEIGHT,
-				1,
-				XCB_WINDOW_CLASS_INPUT_OUTPUT,
-				_screen->root_visual,
-				mask, values);
-	xcb_map_window(_conn, _frame);
-	xcb_reparent_window(_conn, _id, _frame, 0, CLIENT_TITLEBAR_HEIGHT);
+	_frame = new Window(NULL, _x, _y, _width, _height + CLIENT_TITLEBAR_HEIGHT, 1, mask, values);
+
+	xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
 	xcb_flush(_conn);
 
 	// remove the border
@@ -195,9 +174,9 @@ void Client::setupFrame()
 	xcb_flush(_conn);
 }
 
-void Client::drawText(const char * str, xcb_window_t win, int x, int y, int w, int h)
+void Client::drawText(const char * str, Window *win, int x, int y, int w, int h)
 {
-	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, win, _visual, w, h);
+	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, win->id(), _visual, w, h);
 	cairo_t *cr = cairo_create(surface);
 
 	// nice couple pixel padding between the text and the edge

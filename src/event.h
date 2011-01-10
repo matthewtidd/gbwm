@@ -11,8 +11,11 @@ class Event {
 		~Event();
 
 		static Event *instance();
+		void loop();
 
 	private:
+		void process(xcb_generic_event_t *_event);
+
 		static Event *_instance;
 
 };
