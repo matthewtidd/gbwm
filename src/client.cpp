@@ -10,13 +10,13 @@ xcb_screen_t* Client::_screen = 0;
 Client::Client(xcb_window_t win)
 {
 	if (_conn == 0) {
-		_conn = Screen::instance()->connection();
+		_conn = Screen::conn();
 	}
 	if (_screen == 0) {
-		_screen = Screen::instance()->screen();
+		_screen = Screen::screen();
 	}
 	if (_visual == 0) {
-		_visual = draw_screen_default_visual(_screen);
+		_visual = Screen::visual();
 	}
 
 	_id = win;
@@ -78,6 +78,7 @@ Client::Client(xcb_window_t win)
 
 Client::~Client()
 {
+	delete(_closeButton);
 }
 
 Client *Client::getByWindow(xcb_window_t window)
@@ -92,6 +93,7 @@ Client *Client::getByWindow(xcb_window_t window)
 	}
 	return(NULL);
 }
+
 void Client::revert()
 {
 	cout << "attempting to reparent..." << endl;
@@ -154,6 +156,8 @@ void Client::setupTitlebar()
 
 	// nice couple pixel padding between the text and the edge
 	drawText(_title.c_str(), _titlebar, 2, 2, _width - (CLIENT_TITLEBAR_HEIGHT + 4), CLIENT_TITLEBAR_HEIGHT);
+
+	_closeButton = new Button(_titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
 	xcb_flush(_conn);
 }
 

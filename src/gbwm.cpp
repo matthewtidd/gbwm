@@ -15,8 +15,8 @@ using namespace std;
 
 int setupscreen()
 {
-	xcb_connection_t *conn = Screen::instance()->connection();
-	xcb_screen_t *screen = Screen::instance()->screen();
+	xcb_connection_t *conn = Screen::conn();
+	xcb_screen_t *screen = Screen::screen();
 	
 	xcb_query_tree_reply_t *reply;
 	xcb_query_pointer_reply_t *pointer;
@@ -65,8 +65,6 @@ void SignalHandler(int signal_number)
 
 int main(int argc, char** argv)
 {
-	xcb_connection_t *conn;
-	xcb_screen_t *screen;
 	Event *event;
 
 	// SIGNALS
@@ -92,17 +90,14 @@ int main(int argc, char** argv)
 	}
 	event = new Event();
 
-	conn = Screen::instance()->connection();
-	screen = Screen::instance()->screen();
-
-	cout << "INFO: Screen size: " << screen->width_in_pixels << "x" << screen->height_in_pixels << endl;
+	cout << "INFO: Screen size: " << Screen::screen()->width_in_pixels << "x" << Screen::screen()->height_in_pixels << endl;
 	setupscreen();
-	xcb_flush(conn);
+	xcb_flush(Screen::conn());
 
 	// run the event loop
 	event->loop();
 
-	xcb_disconnect(conn);
+	xcb_disconnect(Screen::conn());
 	SignalHandler(0);
 
 	// won't reach here

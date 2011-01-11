@@ -1,4 +1,5 @@
 #include "screen.h"
+#include "draw_context.h"
 
 Screen * Screen::_instance = 0;
 
@@ -14,6 +15,7 @@ Screen::Screen(char * dsp)
 		_connection_error = true;
 	} else {
 		_screen = xcb_setup_roots_iterator(xcb_get_setup(_conn)).data;
+		_visual = draw_screen_default_visual(_screen);
 	}
 
 	if (_instance == 0) {
@@ -30,14 +32,28 @@ Screen* Screen::instance()
 	return(_instance);
 }
 
-xcb_connection_t* Screen::connection()
+xcb_connection_t* Screen::conn()
 {
-	return(_conn);
+	if (!_instance) {
+		return(NULL);
+	}
+	return(_instance->_conn);
 }
 
 xcb_screen_t* Screen::screen()
 {
-	return(_screen);
+	if (!_instance) {
+		return(NULL);
+	}
+	return(_instance->_screen);
+}
+
+xcb_visualtype_t* Screen::visual()
+{
+	if (!_instance) {
+		return(NULL);
+	}
+	return(_instance->_visual);
 }
 
 bool Screen::connectionError()

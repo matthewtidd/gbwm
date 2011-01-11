@@ -12,14 +12,16 @@ class Screen {
 		~Screen();
 
 		static Screen* instance();
+		static xcb_connection_t* conn();
+		static xcb_screen_t* screen();
+		static xcb_visualtype_t* visual();
 
-		xcb_connection_t* connection();
-		xcb_screen_t* screen();
 		bool connectionError();
 
 	private:
 		xcb_connection_t* _conn;
 		xcb_screen_t* _screen;
+		xcb_visualtype_t *_visual;
 		bool _connection_error;
 
 		static Screen* _instance;

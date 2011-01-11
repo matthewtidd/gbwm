@@ -11,6 +11,7 @@
 #include <string>
 #include "draw_context.h"
 #include "window.h"
+#include "button.h"
 
 using namespace std;
 
@@ -43,6 +44,7 @@ class Client {
 		uint32_t _max_height;		// ...
 		Window *_titlebar;
 		Window *_frame;
+		Button *_closeButton;
 		string _title;
 
 		void setupTitlebar();

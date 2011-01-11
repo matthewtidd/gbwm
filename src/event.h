@@ -4,6 +4,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_atom.h>
+#include "window.h"
 
 class Event {
 	public:
@@ -14,6 +15,8 @@ class Event {
 		void loop();
 
 	private:
+		Window *_buttonPressed;
+
 		void process(xcb_generic_event_t *_event);
 
 		static Event *_instance;
