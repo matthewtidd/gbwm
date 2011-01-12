@@ -121,6 +121,6 @@ void Event::process(xcb_generic_event_t *_event)
 	}
 	Window *window = Window::getWindowById(win_id);
 	if (window) {
-		window->debug();
+		//window->debug();
 	}
 }

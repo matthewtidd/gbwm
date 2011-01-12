@@ -27,11 +27,14 @@ class Button : public Window {
 		virtual void mouseCancel();
 
 	private:
+		bool _active;
 		cairo_surface_t *_button;
 		cairo_surface_t *_pressed;
 		cairo_surface_t *_surface;
 		Window * _window;
 		ButtonState _state;
+
+		void redraw();
 };
 
 #endif // __BUTTON_H__
