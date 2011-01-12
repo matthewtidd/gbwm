@@ -92,13 +92,21 @@ void Event::process(xcb_generic_event_t *_event)
 		case XCB_ENTER_NOTIFY: {
 			cout << "EVENT: XCB_ENTER_NOTIFY" << endl;
 			xcb_enter_notify_event_t *en = (xcb_enter_notify_event_t *)_event;
-			//win_id = en->event;
+			win_id = en->event;
+			Window *window = Window::getWindowById(win_id);
+			if (_buttonPressed && _buttonPressed == window) {
+				_buttonPressed->mousePress(NULL);
+			}
 			break;
 		}
 		case XCB_LEAVE_NOTIFY: {
 			cout << "EVENT: XCB_LEAVE_NOTIFY" << endl;
 			xcb_enter_notify_event_t *le = (xcb_enter_notify_event_t *)_event;
-			//win_id = le->event;
+			win_id = le->event;
+			Window *window = Window::getWindowById(win_id);
+			if (_buttonPressed && _buttonPressed == window) {
+				_buttonPressed->mouseCancel();
+			}
 			break;
 		}
 		case XCB_PROPERTY_NOTIFY:

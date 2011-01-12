@@ -83,6 +83,16 @@ xcb_window_t Window::id() const
 	return(_id);
 }
 
+int Window::width() const
+{
+	return(_width);
+}
+
+int Window::height() const
+{
+	return(_height);
+}
+
 void Window::mousePress(xcb_button_press_event_t * /*event*/)
 {
 }

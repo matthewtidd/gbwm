@@ -22,6 +22,8 @@ class Window {
 		static Window * getRootWindowById(xcb_window_t window);
 
 		xcb_window_t id() const;
+		int width() const;
+		int height() const;
 
 		virtual void mousePress(xcb_button_press_event_t *event);
 		virtual void mouseRelease(xcb_button_release_event_t *event);
