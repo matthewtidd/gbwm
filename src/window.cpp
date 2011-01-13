@@ -37,13 +37,12 @@ Window::Window(Window *parent, int x, int y, int w, int h, int border, uint32_t 
 				XCB_WINDOW_CLASS_INPUT_OUTPUT,
 				_screen->root_visual,
 				mask, values);
-	xcb_map_window(_conn, _id);
 
 	const uint32_t win_vals[] = {
 		XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
 		XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
 		XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW |
-		XCB_EVENT_MASK_PROPERTY_CHANGE
+		XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_EXPOSURE
 	};
 	xcb_change_window_attributes(Screen::conn(), _id, XCB_CW_EVENT_MASK, win_vals);
 	xcb_flush(_conn);
@@ -91,6 +90,16 @@ int Window::width() const
 int Window::height() const
 {
 	return(_height);
+}
+
+void Window::draw()
+{
+
+}
+
+void Window::map()
+{
+	xcb_map_window(Screen::conn(), _id);
 }
 
 void Window::mousePress(xcb_button_press_event_t * /*event*/)

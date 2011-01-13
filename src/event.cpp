@@ -18,7 +18,8 @@ Event::Event()
 		XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
 		XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
 		XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW |
-		XCB_EVENT_MASK_PROPERTY_CHANGE
+		XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+		XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
 	};
 	xcb_change_window_attributes(Screen::conn(), Screen::screen()->root, XCB_CW_EVENT_MASK, win_vals);
 
@@ -49,6 +50,14 @@ void Event::process(xcb_generic_event_t *_event)
 			cout << "EVENT: XCB_EXPOSE" << endl;
 			xcb_expose_event_t *ex = (xcb_expose_event_t *)_event;
 			win_id = ex->window;
+			Window *window = Window::getWindowById(win_id);
+			if (win_id == Screen::screen()->root) {
+				Screen::instance()->setupBackground();
+			}
+			if (window) {
+				window->draw();
+				window->debug();
+			}
 			break;
 		}
 		case XCB_KEY_PRESS: {
@@ -112,6 +121,23 @@ void Event::process(xcb_generic_event_t *_event)
 		case XCB_PROPERTY_NOTIFY:
 			cout << "EVENT: XCB_PROPERTY_NOTIFY" << endl;
 			break;
+		case XCB_MAP_NOTIFY: {
+			cout << "EVENT: XCB_MAP_NOTIFY" << endl;
+			xcb_map_request_event_t *mr = (xcb_map_request_event_t *)_event;
+			Client *c = Client::getByWindow(mr->window);
+			if (c) {
+				c->map();
+			}
+			break;
+		}
+		case XCB_CONFIGURE_NOTIFY: {
+			cout << "EVENT: XCB_CONFIGURE_NOTIFY" << endl;
+			xcb_configure_request_event_t *ce = (xcb_configure_request_event_t *)_event;
+			if (Client::getByWindow(ce->window) == NULL) {
+				new Client(ce->window);
+			}
+			break;
+		}
 		default:
 			cout << "EVENT: " << (int)(_event->response_type & ~0x80) << endl;
 			break;

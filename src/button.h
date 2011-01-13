@@ -28,6 +28,7 @@ class Button : public Window {
 		Button(ButtonType type, Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values);
 		~Button();
 
+		virtual void draw();
 		virtual void mousePress(xcb_button_press_event_t *event);
 		virtual void mouseRelease(xcb_button_release_event_t *event);
 		virtual void mouseCancel();
@@ -40,8 +41,6 @@ class Button : public Window {
 		cairo_surface_t *_surface;
 		Window * _window;
 		ButtonState _state;
-
-		void redraw();
 };
 
 #endif // __BUTTON_H__

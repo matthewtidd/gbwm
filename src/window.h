@@ -10,7 +10,8 @@ using namespace std;
 
 enum WindowType {
 	WINDOW_TYPE_NONE,
-	WINDOW_TYPE_BUTTON
+	WINDOW_TYPE_BUTTON,
+	WINDOW_TYPE_TITLEBAR
 };
 
 class Window {
@@ -25,6 +26,8 @@ class Window {
 		int width() const;
 		int height() const;
 
+		virtual void draw();
+		virtual void map();
 		virtual void mousePress(xcb_button_press_event_t *event);
 		virtual void mouseRelease(xcb_button_release_event_t *event);
 		virtual void mouseCancel();

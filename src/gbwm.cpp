@@ -43,7 +43,8 @@ int setupscreen()
 		}
 
 		if (!attr->override_redirect && attr->map_state == XCB_MAP_STATE_VIEWABLE) {
-			new Client(children[i]);
+			Client *c = new Client(children[i]);
+			c->map();
 		}
 	}
 	xcb_flush(conn);

@@ -12,6 +12,7 @@
 #include "draw_context.h"
 #include "window.h"
 #include "button.h"
+#include "titlebar.h"
 
 using namespace std;
 
@@ -29,6 +30,7 @@ class Client {
 		static Client * getByWindow(xcb_window_t window);
 
 		void revert();
+		void map();
 
 		xcb_window_t window() const;
 
@@ -42,7 +44,7 @@ class Client {
 		uint32_t _min_height;		// ...
 		uint32_t _max_width;		// ...
 		uint32_t _max_height;		// ...
-		Window *_titlebar;
+		Titlebar *_titlebar;
 		Window *_frame;
 		Button *_closeButton;
 		string _title;

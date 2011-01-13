@@ -18,10 +18,23 @@ Button::~Button()
 {
 }
 
+void Button::draw()
+{
+	cairo_surface_t *_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
+	cairo_t *cr = cairo_create(_surface);
+	if (_active) {
+		cairo_set_source_surface(cr, _pressed, 0, 0);
+	} else {
+		cairo_set_source_surface(cr, _button, 0, 0);
+	}
+	cairo_paint(cr);
+	xcb_flush(Screen::conn());
+}
+
 void Button::mousePress(xcb_button_press_event_t * /*event*/)
 {
 	_active = true;
-	redraw();
+	draw();
 }
 
 void Button::mouseRelease(xcb_button_release_event_t * /*event*/)
@@ -42,18 +55,5 @@ void Button::mouseRelease(xcb_button_release_event_t * /*event*/)
 void Button::mouseCancel()
 {
 	_active = false;
-	redraw();
-}
-
-void Button::redraw()
-{
-	cairo_surface_t *_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
-	cairo_t *cr = cairo_create(_surface);
-	if (_active) {
-		cairo_set_source_surface(cr, _pressed, 0, 0);
-	} else {
-		cairo_set_source_surface(cr, _button, 0, 0);
-	}
-	cairo_paint(cr);
-	xcb_flush(Screen::conn());
+	draw();
 }

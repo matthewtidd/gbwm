@@ -106,6 +106,13 @@ void Client::revert()
 	cout << "done reparenting..." << endl;
 }
 
+void Client::map()
+{
+	_frame->map();
+	_titlebar->map();
+	_closeButton->map();
+}
+
 xcb_window_t Client::window() const
 {
 	return(_id);
@@ -139,23 +146,7 @@ void Client::setupTitlebar()
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	uint32_t values[2] = {_screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 
-	_titlebar = new Window(_frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
-
-	// fill the background
-	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, _titlebar->id(), _visual, _width, CLIENT_TITLEBAR_HEIGHT);
-	cairo_t *cr = cairo_create(surface);
-	cairo_rectangle(cr, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT);
-	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
-	cairo_fill(cr);
-	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-	cairo_set_line_width(cr, 1.0);
-	cairo_move_to(cr, 0.0, CLIENT_TITLEBAR_HEIGHT);
-	cairo_line_to(cr, _width, CLIENT_TITLEBAR_HEIGHT);
-	cairo_stroke(cr);
-	cairo_destroy(cr);
-
-	// nice couple pixel padding between the text and the edge
-	drawText(_title.c_str(), _titlebar, 2, 2, _width - (CLIENT_TITLEBAR_HEIGHT + 4), CLIENT_TITLEBAR_HEIGHT);
+	_titlebar = new Titlebar(_title.c_str(), _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
 
 	_closeButton = new Button(BUTTON_CLOSE, _titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
 	xcb_flush(_conn);
@@ -176,22 +167,4 @@ void Client::setupFrame()
 	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
 
 	xcb_flush(_conn);
-}
-
-void Client::drawText(const char * str, Window *win, int x, int y, int w, int h)
-{
-	cairo_surface_t *surface = cairo_xcb_surface_create(_conn, win->id(), _visual, w, h);
-	cairo_t *cr = cairo_create(surface);
-
-	// nice couple pixel padding between the text and the edge
-	cairo_move_to(cr, 2, 2);
-	
-	PangoLayout *layout = pango_cairo_create_layout(cr);
-	pango_layout_set_text(layout, str, -1);
-	PangoFontDescription *font_description = pango_font_description_from_string(CLIENT_TITLEBAR_FONT);
-	pango_layout_set_font_description(layout, font_description);
-	pango_font_description_free(font_description);
-	cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
-	pango_cairo_show_layout(cr, layout);
-	cairo_destroy(cr);
 }

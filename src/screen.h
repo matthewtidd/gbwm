@@ -97,6 +97,7 @@ class Screen {
 		static xcb_visualtype_t* visual();
 
 		bool connectionError();
+		void setupBackground();
 
 	private:
 		xcb_connection_t* _conn;
@@ -107,7 +108,6 @@ class Screen {
 		static Screen* _instance;
 
 		void changeCursor();
-		void setupBackground();
 };
 
 #endif // __SCREEN_H__
