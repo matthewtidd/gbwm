@@ -1,10 +1,11 @@
 #include "button.h"
 #include "screen.h"
 
-Button::Button(Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values) :
+Button::Button(ButtonType type, Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values) :
 	Window(parent, x, y, w, h, border, mask, values)
 {
 	_type = WINDOW_TYPE_BUTTON;
+	_buttonType = type;
 
 	_button = cairo_image_surface_create_from_png("../theme/close.png");
 	_pressed = cairo_image_surface_create_from_png("../theme/close_down.png");
@@ -19,7 +20,6 @@ Button::~Button()
 
 void Button::mousePress(xcb_button_press_event_t * /*event*/)
 {
-	cout << "button pressed!!" << endl;
 	_active = true;
 	redraw();
 }
@@ -28,14 +28,19 @@ void Button::mouseRelease(xcb_button_release_event_t * /*event*/)
 {
 	cout << "button release!!" << endl;
 	if (_active) {
-		cout << "ACTIVATE BUTTON!!" << endl;
+		switch (_buttonType) {
+			case BUTTON_CLOSE:
+				cout << "DEBUG: Close window." << endl;
+				break;
+			default:
+				cout << "DEBUG: Unknown button." << endl;
+		}
 	}
 	mouseCancel();
 }
 
 void Button::mouseCancel()
 {
-	cout << "button cancelled!!" << endl;
 	_active = false;
 	redraw();
 }

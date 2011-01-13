@@ -157,7 +157,7 @@ void Client::setupTitlebar()
 	// nice couple pixel padding between the text and the edge
 	drawText(_title.c_str(), _titlebar, 2, 2, _width - (CLIENT_TITLEBAR_HEIGHT + 4), CLIENT_TITLEBAR_HEIGHT);
 
-	_closeButton = new Button(_titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
+	_closeButton = new Button(BUTTON_CLOSE, _titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
 	xcb_flush(_conn);
 }
 

@@ -17,9 +17,15 @@ enum ButtonState {
 	BUTTON_UNPRESSED
 };
 
+enum ButtonType {
+	BUTTON_CLOSE,
+	BUTTON_MINIMIZE,
+	BUTTON_MAXIMIZE
+};
+
 class Button : public Window {
 	public:
-		Button(Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values);
+		Button(ButtonType type, Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values);
 		~Button();
 
 		virtual void mousePress(xcb_button_press_event_t *event);
@@ -27,6 +33,7 @@ class Button : public Window {
 		virtual void mouseCancel();
 
 	private:
+		ButtonType _buttonType;
 		bool _active;
 		cairo_surface_t *_button;
 		cairo_surface_t *_pressed;
