@@ -28,6 +28,7 @@ class Window {
 
 		virtual void draw();
 		virtual void map();
+		virtual void unmap();
 		virtual void mousePress(xcb_button_press_event_t *event);
 		virtual void mouseRelease(xcb_button_release_event_t *event);
 		virtual void mouseCancel();
@@ -38,6 +39,7 @@ class Window {
 		WindowType _type;
 
 	private:
+		bool _mapped;
 		xcb_window_t _id;
 		Window *_parent;
 		int _x;

@@ -126,10 +126,44 @@ void Event::process(xcb_generic_event_t *_event)
 			xcb_map_request_event_t *mr = (xcb_map_request_event_t *)_event;
 			Client *c = Client::getByWindow(mr->window);
 			if (c) {
+				cout << "EVENT: MAP client" << endl;
+				c->debug();
 				c->map();
 			}
 			break;
 		}
+		case XCB_UNMAP_NOTIFY: {
+			cout << "EVENT: XCB_UNMAP_NOTIFY" << endl;
+			xcb_map_request_event_t *mr = (xcb_map_request_event_t *)_event;
+			Client *c = Client::getByWindow(mr->window);
+			if (c) {
+				cout << "EVENT: UNMAP client" << endl;
+				c->unmap();
+			}
+			break;
+		}
+		case XCB_DESTROY_NOTIFY: {
+			cout << "EVENT: XCB_DESTROY_NOTIFY" << endl;
+			xcb_destroy_notify_event_t *dn = (xcb_destroy_notify_event_t *)_event;
+			Client *c = Client::getByWindow(dn->window);
+			if (c) {
+				cout << "EVENT: DESTROY client" << endl;
+				Client::destroy(c);
+			}
+		}
+		case XCB_REPARENT_NOTIFY: {
+			cout << "EVENT: XCB_REPARENT_NOTIFY" << endl;
+			xcb_reparent_notify_event_t *rn = (xcb_reparent_notify_event_t *)_event;
+			Client *c = Client::getByWindow(rn->window);
+			if (c) {
+				cout << "EVENT: REPARENT client" << endl;
+				c->reparent();
+			}
+			break;
+		}
+		case XCB_CREATE_NOTIFY:
+			cout << "EVENT: XCB_CREATE_NOTIFY" << endl;
+			break;
 		case XCB_CONFIGURE_NOTIFY: {
 			cout << "EVENT: XCB_CONFIGURE_NOTIFY" << endl;
 			xcb_configure_request_event_t *ce = (xcb_configure_request_event_t *)_event;

@@ -24,6 +24,8 @@ Client::Client(xcb_window_t win)
 	_y = 0;
 	_width = 0;
 	_height = 0;
+	_mapped = false;
+	_reparented = false;
 
 	// GEOMETRY
 	xcb_get_geometry_cookie_t geomCookie = xcb_get_geometry(_conn, win);
@@ -94,6 +96,12 @@ Client *Client::getByWindow(xcb_window_t window)
 	return(NULL);
 }
 
+void Client::destroy(Client *client)
+{
+	_clients.remove(client);
+	delete(client);
+}
+
 void Client::revert()
 {
 	cout << "attempting to reparent..." << endl;
@@ -108,17 +116,48 @@ void Client::revert()
 
 void Client::map()
 {
-	_frame->map();
-	_titlebar->map();
-	_closeButton->map();
+	if (!_mapped) {
+		_frame->map();
+		_titlebar->map();
+		_closeButton->map();
 
-	xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
-	xcb_flush(_conn);
+		if (!_reparented) {
+			xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
+			xcb_flush(_conn);
 
-	// remove the border
-	uint32_t move_values[1] = { 0 };
-	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
+			// remove the border
+			uint32_t move_values[1] = { 0 };
+			xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
+		}
+		_mapped = true;
+	}
+}
 
+void Client::unmap()
+{
+	// X sends us an unmap when we try to reparent, we need to ignore it
+	cout << "Client unmap - " << (_mapped ? "mapped" : "not mapped") << (_reparented ? "reparented" : "not reparented") << endl;
+	if (_mapped && _reparented) {
+		_closeButton->unmap();
+		_titlebar->unmap();
+		_frame->unmap();
+		xcb_flush(Screen::conn());
+		_mapped = false;
+	}
+}
+
+void Client::reparent()
+{
+	if (!_reparented) {
+		_reparented = true;
+		const uint32_t win_vals[] = {
+			XCB_EVENT_MASK_PROPERTY_CHANGE |
+			XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
+		};
+		xcb_change_window_attributes(Screen::conn(), _id, XCB_CW_EVENT_MASK, win_vals);
+	} else {
+		cout << "ERROR: Call to client reparent that was already done!" << endl;
+	}
 }
 
 xcb_window_t Client::window() const

@@ -28,13 +28,18 @@ class Client {
 		static int count();
 		static list<Client *> clients();
 		static Client * getByWindow(xcb_window_t window);
+		static void destroy(Client *client);
 
 		void revert();
 		void map();
+		void unmap();
+		void reparent();  // used to set the reparented flag from an X event after we called reparent
 
 		xcb_window_t window() const;
 
 	private:
+		bool _mapped;
+		bool _reparented;
 		xcb_drawable_t _id;
 		uint32_t _x;
 		uint32_t _y;
