@@ -160,6 +160,11 @@ void Client::reparent()
 	}
 }
 
+xcb_drawable_t Client::id()
+{
+	return(_id);
+}
+
 xcb_window_t Client::window() const
 {
 	return(_id);
@@ -195,7 +200,7 @@ void Client::setupTitlebar()
 
 	_titlebar = new Titlebar(_title.c_str(), _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
 
-	_closeButton = new Button(BUTTON_CLOSE, _titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
+	_closeButton = new Button(this, BUTTON_CLOSE, _titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
 	xcb_flush(_conn);
 }
 

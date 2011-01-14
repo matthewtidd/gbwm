@@ -34,6 +34,7 @@ class Client {
 		void map();
 		void unmap();
 		void reparent();  // used to set the reparented flag from an X event after we called reparent
+		xcb_drawable_t id();
 
 		xcb_window_t window() const;
 

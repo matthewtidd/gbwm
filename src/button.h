@@ -23,9 +23,11 @@ enum ButtonType {
 	BUTTON_MAXIMIZE
 };
 
+class Client;
+
 class Button : public Window {
 	public:
-		Button(ButtonType type, Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values);
+		Button(Client *client, ButtonType type, Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values);
 		~Button();
 
 		virtual void draw();
@@ -34,6 +36,7 @@ class Button : public Window {
 		virtual void mouseCancel();
 
 	private:
+		Client *_client;
 		ButtonType _buttonType;
 		bool _active;
 		cairo_surface_t *_button;
@@ -41,6 +44,8 @@ class Button : public Window {
 		cairo_surface_t *_surface;
 		Window * _window;
 		ButtonState _state;
+
+		void closeAction();
 };
 
 #endif // __BUTTON_H__
