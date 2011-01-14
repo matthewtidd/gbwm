@@ -98,6 +98,7 @@ class Screen {
 
 		bool connectionError();
 		void setupBackground();
+		void revertBackground();
 
 	private:
 		xcb_connection_t* _conn;

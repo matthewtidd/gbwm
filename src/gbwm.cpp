@@ -54,6 +54,7 @@ int setupscreen()
 void SignalHandler(int signal_number)
 {
 	cout << "DEBUG: signal " << signal_number << endl;
+	Screen::instance()->revertBackground();
 	list<Client *> clients = Client::clients();
 	list<Client *>::iterator iter;
 	for (iter = clients.begin(); iter != clients.end(); iter++) {
@@ -61,6 +62,7 @@ void SignalHandler(int signal_number)
 		c->revert();
 	}
 	clients.clear();
+	xcb_disconnect(Screen::conn());
 	exit(signal_number);
 }
 

@@ -110,3 +110,14 @@ void Screen::setupBackground()
 	cairo_paint(cr);
 	xcb_flush(_conn);
 }
+
+void Screen::revertBackground()
+{
+	cairo_surface_t *_surface = cairo_xcb_surface_create(_conn, _screen->root, _visual, 1024, 768);
+	cairo_t *cr = cairo_create(_surface);
+	cairo_rectangle(cr, 0, 0, 1024, 768);
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	cairo_fill(cr);
+	cairo_paint(cr);
+	xcb_flush(_conn);
+}
