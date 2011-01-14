@@ -12,16 +12,24 @@ Event* Event::_instance = 0;
 Event::Event()
 {
 	cout << "DEBUG: Event()" << endl;
+	_error = false;
 	_buttonPressed = 0;
+	xcb_void_cookie_t cookie;
+	xcb_generic_error_t *error;
 
 	const uint32_t win_vals[] = {
 		XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
 		XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
 		XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW |
 		XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
-		XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
+		XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
+		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
 	};
-	xcb_change_window_attributes(Screen::conn(), Screen::screen()->root, XCB_CW_EVENT_MASK, win_vals);
+	cookie = xcb_change_window_attributes_checked(Screen::conn(), Screen::screen()->root, XCB_CW_EVENT_MASK, win_vals);
+	error = xcb_request_check(Screen::conn(), cookie);
+	if (error != NULL) {
+		_error = true;
+	}
 
 	if (_instance == 0) {
 		_instance = this;
@@ -183,4 +191,9 @@ void Event::process(xcb_generic_event_t *_event)
 	if (window) {
 		//window->debug();
 	}
+}
+
+bool Event::error()
+{
+	return(_error);
 }

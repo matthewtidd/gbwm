@@ -13,8 +13,10 @@ class Event {
 
 		static Event *instance();
 		void loop();
+		bool error();
 
 	private:
+		bool _error;
 		Window *_buttonPressed;
 
 		void process(xcb_generic_event_t *_event);

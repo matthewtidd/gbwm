@@ -92,6 +92,10 @@ int main(int argc, char** argv)
 		new Screen(0);
 	}
 	event = new Event();
+	if (event->error()) {
+		cout << "ERROR: Another window manager is running!" << endl;
+		SignalHandler(0);
+	}
 
 	cout << "INFO: Screen size: " << Screen::screen()->width_in_pixels << "x" << Screen::screen()->height_in_pixels << endl;
 	setupscreen();
