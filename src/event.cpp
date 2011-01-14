@@ -99,7 +99,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_ENTER_NOTIFY: {
-			cout << "EVENT: XCB_ENTER_NOTIFY" << endl;
+			//cout << "EVENT: XCB_ENTER_NOTIFY" << endl;
 			xcb_enter_notify_event_t *en = (xcb_enter_notify_event_t *)_event;
 			win_id = en->event;
 			Window *window = Window::getWindowById(win_id);
@@ -109,7 +109,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_LEAVE_NOTIFY: {
-			cout << "EVENT: XCB_LEAVE_NOTIFY" << endl;
+			//cout << "EVENT: XCB_LEAVE_NOTIFY" << endl;
 			xcb_enter_notify_event_t *le = (xcb_enter_notify_event_t *)_event;
 			win_id = le->event;
 			Window *window = Window::getWindowById(win_id);
@@ -143,7 +143,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 	}
 	if (win_id == Screen::screen()->root) {
-		cout << "DEBUG: ROOT WINDOW!" << endl;
+		//cout << "DEBUG: ROOT WINDOW!" << endl;
 	}
 	Window *window = Window::getWindowById(win_id);
 	if (window) {

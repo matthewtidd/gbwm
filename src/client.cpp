@@ -111,6 +111,14 @@ void Client::map()
 	_frame->map();
 	_titlebar->map();
 	_closeButton->map();
+
+	xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
+	xcb_flush(_conn);
+
+	// remove the border
+	uint32_t move_values[1] = { 0 };
+	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
+
 }
 
 xcb_window_t Client::window() const
@@ -158,13 +166,6 @@ void Client::setupFrame()
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
 
 	_frame = new Window(NULL, _x, _y, _width, _height + CLIENT_TITLEBAR_HEIGHT, 1, mask, values);
-
-	xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
-	xcb_flush(_conn);
-
-	// remove the border
-	uint32_t move_values[1] = { 0 };
-	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, move_values);
 
 	xcb_flush(_conn);
 }
