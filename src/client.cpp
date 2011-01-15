@@ -122,6 +122,7 @@ void Client::map()
 		_closeButton->map();
 
 		if (!_reparented) {
+			cout << "DEBUG: reparenting client to frame" << endl;
 			xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
 			xcb_flush(_conn);
 
@@ -152,7 +153,8 @@ void Client::reparent()
 		_reparented = true;
 		const uint32_t win_vals[] = {
 			XCB_EVENT_MASK_PROPERTY_CHANGE |
-			XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY
+			XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
+			XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
 		};
 		xcb_change_window_attributes(Screen::conn(), _id, XCB_CW_EVENT_MASK, win_vals);
 	} else {

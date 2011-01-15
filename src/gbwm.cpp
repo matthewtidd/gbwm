@@ -53,8 +53,10 @@ int setupscreen()
 
 void SignalHandler(int signal_number)
 {
-	cout << "DEBUG: signal " << signal_number << endl;
-	Screen::instance()->revertBackground();
+	cout << "DEBUG: Exiting with signal " << signal_number << endl;
+	if (!Screen::instance()->connectionError()) {
+		Screen::instance()->revertBackground();
+	}
 	list<Client *> clients = Client::clients();
 	list<Client *>::iterator iter;
 	for (iter = clients.begin(); iter != clients.end(); iter++) {
@@ -62,13 +64,16 @@ void SignalHandler(int signal_number)
 		c->revert();
 	}
 	clients.clear();
-	xcb_disconnect(Screen::conn());
+	if (!Screen::instance()->connectionError()) {
+		xcb_disconnect(Screen::conn());
+	}
 	exit(signal_number);
 }
 
 int main(int argc, char** argv)
 {
 	Event *event;
+	Screen *screen;
 
 	// SIGNALS
 	signal(SIGALRM, SignalHandler);
@@ -87,14 +92,17 @@ int main(int argc, char** argv)
 
 	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << endl;
 	if (argc == 2) {
-		new Screen(argv[1]);
+		screen = new Screen(argv[1]);
 	} else {
-		new Screen(0);
+		screen = new Screen(0);
+	}
+	if (screen->connectionError()) {
+		SignalHandler(1);
 	}
 	event = new Event();
 	if (event->error()) {
 		cout << "ERROR: Another window manager is running!" << endl;
-		SignalHandler(0);
+		SignalHandler(1);
 	}
 
 	cout << "INFO: Screen size: " << Screen::screen()->width_in_pixels << "x" << Screen::screen()->height_in_pixels << endl;

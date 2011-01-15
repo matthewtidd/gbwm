@@ -11,7 +11,7 @@ Screen::Screen(char * dsp)
 
 	_conn = xcb_connect(dsp, NULL);
 	if (xcb_connection_has_error(_conn)) {
-		cout << "xcb_connect error!";
+		cout << "ERROR: xcb_connect error!" << endl;
 		_connection_error = true;
 	} else {
 		_screen = xcb_setup_roots_iterator(xcb_get_setup(_conn)).data;

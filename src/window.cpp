@@ -141,6 +141,9 @@ void Window::debug() const
 		case WINDOW_TYPE_BUTTON:
 			cout << "DEBUG:    type = BUTTON" << endl;
 			break;
+		case WINDOW_TYPE_TITLEBAR:
+			cout << "DEBUG:    type = TITLEBAR" << endl;
+			break;
 		default:
 			cout << "DEBUG:    type = UNKNOWN" << endl;
 	}
