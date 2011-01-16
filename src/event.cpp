@@ -9,11 +9,14 @@ using namespace std;
 
 Event* Event::_instance = 0;
 
+extern void SignalHandler(int);
+
 Event::Event()
 {
 	cout << "DEBUG: Event()" << endl;
 	_error = false;
 	_buttonPressed = 0;
+	_event = 0;
 	_i = 100;
 	xcb_void_cookie_t cookie;
 	xcb_generic_error_t *error;
@@ -37,6 +40,13 @@ Event::Event()
 	}
 }
 
+Event::~Event()
+{
+	if (_event) {
+		free(_event);
+	}
+}
+
 Event* Event::instance()
 {
 	return(_instance);
@@ -44,16 +54,18 @@ Event* Event::instance()
 
 void Event::loop()
 {
-	xcb_generic_event_t *_event;
-	while (_event = xcb_wait_for_event(Screen::conn())) {
+	_event = xcb_wait_for_event(Screen::conn());
+	while (_event) {
 		process(_event);
 		free(_event);
+		_event = 0;
+		_event = xcb_wait_for_event(Screen::conn());
 	}
 }
 
 void Event::process(xcb_generic_event_t *_event)
 {
-	xcb_window_t win_id;
+	xcb_window_t win_id = 0;
 	switch (_event->response_type & ~0x80) {
 		case XCB_KEY_PRESS: { // 2
 			cout << _i << ":EVENT: XCB_KEY_PRESS" << endl;
@@ -65,6 +77,11 @@ void Event::process(xcb_generic_event_t *_event)
 			cout << _i << ":EVENT: XCB_KEY_RELEASE" << endl;
 			xcb_key_release_event_t *kr = (xcb_key_release_event_t *)_event;
 			win_id = kr->event;
+			cout << "KEY: " << (int)kr->detail << endl;
+			// ESC exits
+			if ((int)kr->detail == 9) {
+				SignalHandler(0);
+			}
 			break;
 		}
 		case XCB_BUTTON_PRESS: { // 4
@@ -331,9 +348,11 @@ void Event::process(xcb_generic_event_t *_event)
 	if (win_id == Screen::screen()->root) {
 		//cout << "DEBUG: ROOT WINDOW!" << endl;
 	}
-	Window *window = Window::getWindowById(win_id);
-	if (window) {
-		//window->debug();
+	if (win_id != 0) {
+		Window *window = Window::getWindowById(win_id);
+		if (window) {
+			//window->debug();
+		}
 	}
 	_i = _i++;
 }

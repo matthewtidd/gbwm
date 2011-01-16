@@ -19,6 +19,7 @@ class Event {
 		bool _error;
 		int _i;
 		Window *_buttonPressed;
+		xcb_generic_event_t *_event;
 
 		void process(xcb_generic_event_t *_event);
 

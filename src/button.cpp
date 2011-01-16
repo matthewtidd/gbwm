@@ -14,6 +14,7 @@ Button::Button(Client *client, ButtonType type, Window *parent, int x, int y, in
 
 	_button = cairo_image_surface_create_from_png("../theme/close.png");
 	_pressed = cairo_image_surface_create_from_png("../theme/close_down.png");
+	_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
 
 	mouseCancel();
 	_active = false;
@@ -21,11 +22,13 @@ Button::Button(Client *client, ButtonType type, Window *parent, int x, int y, in
 
 Button::~Button()
 {
+	cairo_surface_destroy(_surface);
+	cairo_surface_destroy(_button);
+	cairo_surface_destroy(_pressed);
 }
 
 void Button::draw()
 {
-	cairo_surface_t *_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
 	cairo_t *cr = cairo_create(_surface);
 	if (_active) {
 		cairo_set_source_surface(cr, _pressed, 0, 0);
@@ -33,6 +36,7 @@ void Button::draw()
 		cairo_set_source_surface(cr, _button, 0, 0);
 	}
 	cairo_paint(cr);
+	cairo_destroy(cr);;
 	xcb_flush(Screen::conn());
 }
 
@@ -76,7 +80,7 @@ void Button::closeAction()
 	// check if WM_DELETE is supported
 	cookie = xcb_get_wm_protocols_unchecked(Screen::conn(), _client->id(), wm_protocols);
 	if (xcb_get_wm_protocols_reply(Screen::conn(), cookie, &protocols, NULL) == 1) {
-		for (int i = 0; i < protocols.atoms_len; i++) {
+		for (unsigned int i = 0; i < protocols.atoms_len; i++) {
 			if (protocols.atoms[i] == wm_delete_window) {
 				use_delete = true;
 			}

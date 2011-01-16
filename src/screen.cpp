@@ -8,6 +8,8 @@ Screen::Screen(char * dsp)
 	_conn = 0;
 	_screen = 0;
 	_connection_error = false;
+	_surface = 0;
+	_cr = 0;
 
 	_conn = xcb_connect(dsp, NULL);
 	if (xcb_connection_has_error(_conn)) {
@@ -16,6 +18,9 @@ Screen::Screen(char * dsp)
 	} else {
 		_screen = xcb_setup_roots_iterator(xcb_get_setup(_conn)).data;
 		_visual = draw_screen_default_visual(_screen);
+		xcb_flush(_conn);
+		_surface = cairo_xcb_surface_create(_conn, _screen->root, _visual, 1024, 768);
+		_cr = cairo_create(_surface);
 		changeCursor();
 		setupBackground();
 	}
@@ -27,6 +32,12 @@ Screen::Screen(char * dsp)
 
 Screen::~Screen()
 {
+	if (_surface) {
+		cairo_surface_destroy(_surface);
+	}
+	if (_cr) {
+		cairo_destroy(_cr);
+	}
 }
 
 Screen* Screen::instance()
@@ -102,22 +113,33 @@ void Screen::changeCursor()
 
 void Screen::setupBackground()
 {
-	cairo_surface_t *_surface = cairo_xcb_surface_create(_conn, _screen->root, _visual, 1024, 768);
-	cairo_t *cr = cairo_create(_surface);
-	cairo_rectangle(cr, 0, 0, 1024, 768);
-	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
-	cairo_fill(cr);
-	cairo_paint(cr);
+	cairo_rectangle(_cr, 0, 0, 1024, 768);
+	cairo_set_source_rgb(_cr, 0.9, 0.9, 0.9);
+	cairo_fill(_cr);
 	xcb_flush(_conn);
 }
 
 void Screen::revertBackground()
 {
-	cairo_surface_t *_surface = cairo_xcb_surface_create(_conn, _screen->root, _visual, 1024, 768);
-	cairo_t *cr = cairo_create(_surface);
-	cairo_rectangle(cr, 0, 0, 1024, 768);
-	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-	cairo_fill(cr);
-	cairo_paint(cr);
+	cairo_rectangle(_cr, 0, 0, 1024, 768);
+	cairo_set_source_rgb(_cr, 0.0, 0.0, 0.0);
+	cairo_fill(_cr);
 	xcb_flush(_conn);
+}
+
+xcb_visualtype_t * Screen::draw_screen_default_visual(xcb_screen_t *s)
+{
+    if(!s)
+        return NULL;
+
+    xcb_depth_iterator_t depth_iter = xcb_screen_allowed_depths_iterator(s);
+
+    if(depth_iter.data)
+        for(; depth_iter.rem; xcb_depth_next (&depth_iter))
+            for(xcb_visualtype_iterator_t visual_iter = xcb_depth_visuals_iterator (depth_iter.data);
+                 visual_iter.rem; xcb_visualtype_next (&visual_iter))
+                if(s->root_visual == visual_iter.data->visual_id)
+                    return visual_iter.data;
+
+    return NULL;
 }

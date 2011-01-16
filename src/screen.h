@@ -2,6 +2,7 @@
 #define __SCREEN_H__
 
 #include <xcb/xcb.h>
+#include <cairo/cairo-xcb.h>
 #include <iostream>
 
 using namespace std;
@@ -104,11 +105,14 @@ class Screen {
 		xcb_connection_t* _conn;
 		xcb_screen_t* _screen;
 		xcb_visualtype_t *_visual;
+		cairo_surface_t *_surface;
+		cairo_t *_cr;
 		bool _connection_error;
 
 		static Screen* _instance;
 
 		void changeCursor();
+		xcb_visualtype_t * draw_screen_default_visual(xcb_screen_t *s);
 };
 
 #endif // __SCREEN_H__

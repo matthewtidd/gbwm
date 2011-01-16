@@ -17,21 +17,5 @@ struct DrawContext {
 	xcolor_t bg;*/
 };
 
-static xcb_visualtype_t * draw_screen_default_visual(xcb_screen_t *s)
-{
-    if(!s)
-        return NULL;
 
-    xcb_depth_iterator_t depth_iter = xcb_screen_allowed_depths_iterator(s);
-
-    if(depth_iter.data)
-        for(; depth_iter.rem; xcb_depth_next (&depth_iter))
-            for(xcb_visualtype_iterator_t visual_iter = xcb_depth_visuals_iterator (depth_iter.data);
-                 visual_iter.rem; xcb_visualtype_next (&visual_iter))
-                if(s->root_visual == visual_iter.data->visual_id)
-                    return visual_iter.data;
-
-    return NULL;
-}
-
-#endif // __DRAW_H__
+#endif // __DRAW_CONTEXT_H__

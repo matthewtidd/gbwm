@@ -64,10 +64,10 @@ Client::Client(xcb_window_t win)
 	got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
 	if (!got_reply || prop.name_len == 0) {
 		cout << "ERROR: No name for client" << endl;
-		_title = "(none)";
+		_title = new string("(none)");
 	} else {
 		cout << "DEBUG: Client Name = " << prop.name << endl;
-		_title = string(prop.name);
+		_title = new string(prop.name);
 	}
 	xcb_get_text_property_reply_wipe(&prop);
 
@@ -80,7 +80,19 @@ Client::Client(xcb_window_t win)
 
 Client::~Client()
 {
-	delete(_closeButton);
+	if (_closeButton) {
+		delete(_closeButton);
+	}
+	if (_titlebar) {
+		delete(_titlebar);
+	}
+	if (_frame) {
+		delete(_frame);
+	}
+	if (_title) {
+		delete(_title);
+	}
+	_clients.remove(this);
 }
 
 Client *Client::getByWindow(xcb_window_t window)
@@ -98,6 +110,7 @@ Client *Client::getByWindow(xcb_window_t window)
 
 void Client::destroy(Client *client)
 {
+	client->revert();
 	_clients.remove(client);
 	delete(client);
 }
@@ -109,7 +122,9 @@ void Client::revert()
 	uint32_t values[1] = {1};
 	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
 	delete(_titlebar);
+	_titlebar = 0;
 	delete(_frame);
+	_frame = 0;
 	xcb_flush(_conn);
 	cout << "done reparenting..." << endl;
 }
@@ -200,7 +215,7 @@ void Client::setupTitlebar()
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	uint32_t values[2] = {_screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 
-	_titlebar = new Titlebar(_title.c_str(), _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
+	_titlebar = new Titlebar(_title->c_str(), _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
 
 	_closeButton = new Button(this, BUTTON_CLOSE, _titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
 	xcb_flush(_conn);

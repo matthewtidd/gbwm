@@ -27,22 +27,26 @@ void Titlebar::draw()
 	cairo_line_to(cr, width(), height());
 	cairo_stroke(cr);
 	cairo_destroy(cr);
+	cairo_surface_destroy(surface);
 
 	// draw the text
 	cairo_surface_t *text_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
-	cr = cairo_create(text_surface);
+	cairo_t *cr2 = cairo_create(text_surface);
 
 	// nice couple pixel padding between the text and the edge
-	cairo_move_to(cr, 2, 2);
+	cairo_move_to(cr2, 2, 2);
 	
-	PangoLayout *layout = pango_cairo_create_layout(cr);
+	PangoLayout *layout = pango_cairo_create_layout(cr2);
 	pango_layout_set_text(layout, _text.c_str(), -1);
 	PangoFontDescription *font_description = pango_font_description_from_string(CLIENT_TITLEBAR_FONT);
 	pango_layout_set_font_description(layout, font_description);
 	pango_font_description_free(font_description);
-	cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
-	pango_cairo_show_layout(cr, layout);
-	cairo_destroy(cr);
+	cairo_set_source_rgb(cr2, 0.1, 0.1, 0.1);
+	pango_cairo_show_layout(cr2, layout);
+	g_object_unref(layout);
+	cairo_destroy(cr2);
+
+	cairo_surface_destroy(text_surface);
 }
 
 void Titlebar::setText(const char *txt)

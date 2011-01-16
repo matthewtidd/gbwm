@@ -5,6 +5,9 @@ set (PROJECT_SOURCE_DIR src)
 
 set (GBWM_VERSION_MAJOR 0)
 set (GBWM_VERSION_MINOR 3)
+set (GBWM_VERSION_REV   0)
+
+set (CMAKE_CXX_FLAGS "-g -Wall")
 
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config.h.in"

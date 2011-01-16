@@ -53,7 +53,7 @@ class Client {
 		Titlebar *_titlebar;
 		Window *_frame;
 		Button *_closeButton;
-		string _title;
+		string *_title;
 
 		void setupTitlebar();
 		void setupFrame();
