@@ -5,11 +5,14 @@
 #include <xcb/xcb_icccm.h>
 #include <stdlib.h>
 #include <list>
+#include <exception>
 
 #include "config.h"
 #include "screen.h"
 #include "client.h"
 #include "event.h"
+#include "theme.h"
+#include "config_file.h"
 
 using namespace std;
 
@@ -82,6 +85,9 @@ int main(int argc, char** argv)
 	Event *event;
 	Screen *screen;
 
+	// config file defaults
+	string theme_folder;
+
 	// SIGNALS
 	signal(SIGALRM, SignalHandler);
 	signal(SIGHUP, SignalHandler);
@@ -97,6 +103,23 @@ int main(int argc, char** argv)
 	signal(SIGQUIT, SignalHandler);
 
 	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << "." << GBWM_VERSION_REV << endl;
+
+	// load config file
+	try {
+		string config_file = string(getenv("HOME"));
+		config_file.append("/.gbwmrc");
+		cout << "DEBUG: config_file = " << config_file.c_str() << endl;
+		ConfigFile config(config_file.c_str());
+		
+		cout << "DEBUG: Config file found, loading values" << endl;
+
+		theme_folder = config.read<string>("theme", "../theme");
+	} catch (ConfigFile::file_not_found &e) {
+		// set up defaults for when there isn't a config file
+		cout << "DEBUG: Config file not found, loading sensible defaults" << endl;
+		theme_folder = "../theme";
+	}
+
 	if (argc == 2) {
 		screen = new Screen(argv[1]);
 	} else {
@@ -105,6 +128,9 @@ int main(int argc, char** argv)
 	if (screen->connectionError()) {
 		SignalHandler(1);
 	}
+
+	new Theme(theme_folder.c_str());
+
 	event = new Event();
 	if (event->error()) {
 		cout << "ERROR: Another window manager is running!" << endl;

@@ -1,6 +1,7 @@
 #include "button.h"
 #include "screen.h"
 #include "client.h"
+#include "theme.h"
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 #include <xcb/xcb_icccm.h>
@@ -11,9 +12,10 @@ Button::Button(Client *client, ButtonType type, Window *parent, int x, int y, in
 	_type = WINDOW_TYPE_BUTTON;
 	_buttonType = type;
 	_client = client;
+	Theme *theme = Theme::instance();
 
-	_button = cairo_image_surface_create_from_png("../theme/close.png");
-	_pressed = cairo_image_surface_create_from_png("../theme/close_down.png");
+	_button = cairo_image_surface_create_from_png(theme->path("close.png"));
+	_pressed = cairo_image_surface_create_from_png(theme->path("close_down.png"));
 	_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
 
 	mouseCancel();

@@ -1,0 +1,4 @@
+# config file for gbwm
+
+# location of theme folder
+theme = ~/.gbwm/theme
