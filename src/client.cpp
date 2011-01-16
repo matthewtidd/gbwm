@@ -1,6 +1,7 @@
 #include "client.h"
 #include "screen.h"
 #include <malloc.h>
+#include "log.h"
 
 list<Client *> Client::_clients;
 xcb_visualtype_t* Client::_visual = 0;
@@ -46,7 +47,7 @@ Client::Client(xcb_window_t win)
 	// SIZE HINTS
 	xcb_size_hints_t hints;
 	if (!xcb_get_wm_normal_hints_reply(_conn, xcb_get_wm_normal_hints_unchecked(_conn, win), &hints, NULL)) {
-		cout << "ERROR: Couldn't get size hints." << endl;
+		LOG_ERROR("Counldn't get size hints.");
 	}
 
 	// user specified geometry
@@ -63,10 +64,10 @@ Client::Client(xcb_window_t win)
 	uint8_t got_reply;
 	got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
 	if (!got_reply || prop.name_len == 0) {
-		cout << "ERROR: No name for client" << endl;
+		LOG_ERROR("No name for client");
 		_title = new string("(none)");
 	} else {
-		cout << "DEBUG: Client Name = " << prop.name << endl;
+		LOG_DEBUG("Client name = " << prop.name);
 		_title = new string(prop.name);
 	}
 	xcb_get_text_property_reply_wipe(&prop);
@@ -117,7 +118,7 @@ void Client::destroy(Client *client)
 
 void Client::revert()
 {
-	cout << "attempting to reparent..." << endl;
+	LOG_DEBUG("Attempting to reparent");
 	xcb_reparent_window(_conn, _id, _screen->root, _x, _y);
 	uint32_t values[1] = {1};
 	xcb_configure_window(_conn, _id, XCB_CONFIG_WINDOW_BORDER_WIDTH, values);
@@ -126,7 +127,7 @@ void Client::revert()
 	delete(_frame);
 	_frame = 0;
 	xcb_flush(_conn);
-	cout << "done reparenting..." << endl;
+	LOG_DEBUG("Done reparenting");
 }
 
 void Client::map()
@@ -137,7 +138,7 @@ void Client::map()
 		_closeButton->map();
 
 		if (!_reparented) {
-			cout << "DEBUG: reparenting client to frame" << endl;
+			LOG_DEBUG("Reparenting client to frame");
 			xcb_reparent_window(_conn, _id, _frame->id(), 0, CLIENT_TITLEBAR_HEIGHT);
 			xcb_flush(_conn);
 
@@ -152,7 +153,8 @@ void Client::map()
 void Client::unmap()
 {
 	// X sends us an unmap when we try to reparent, we need to ignore it
-	cout << "Client unmap - " << (_mapped ? "mapped" : "not mapped") << (_reparented ? "reparented" : "not reparented") << endl;
+	
+	LOG_DEBUG("Client unmap - " << (_mapped ? "mapped" : "not mapped") << (_reparented ? " reparented" : " not reparented"));
 	if (_mapped && _reparented) {
 		_closeButton->unmap();
 		_titlebar->unmap();
@@ -173,7 +175,7 @@ void Client::reparent()
 		};
 		xcb_change_window_attributes(Screen::conn(), _id, XCB_CW_EVENT_MASK, win_vals);
 	} else {
-		cout << "ERROR: Call to client reparent that was already done!" << endl;
+		LOG_ERROR("Call to client reparent that was already done!");
 	}
 }
 
@@ -189,15 +191,15 @@ xcb_window_t Client::window() const
 
 void Client::debug()
 {
-	cout << "DEBUG: client = " << _id << endl;
-	cout << "DEBUG:   x = " << _x << endl;
-	cout << "DEBUG:   y = " << _y << endl;
-	cout << "DEBUG:   width = " << _width << endl;
-	cout << "DEBUG:   height = " << _height << endl;
-	cout << "DEBUG:   min_width = " << _min_width << endl;
-	cout << "DEBUG:   min_height = " << _min_height << endl;
-	cout << "DEBUG:   max_width = " << _max_width << endl;
-	cout << "DEBUG:   max_height = " << _max_height << endl;
+	LOG_DEBUG("client = " << _id);
+	LOG_DEBUG("  x = " << _x);
+	LOG_DEBUG("  y = " << _y);
+	LOG_DEBUG("  width = " << _width);
+	LOG_DEBUG("  height = " << _height);
+	LOG_DEBUG("  min_width = " << _min_width);
+	LOG_DEBUG("  min_height = " << _min_height);
+	LOG_DEBUG("  max_width = " << _max_width);
+	LOG_DEBUG("  max_height = " << _max_height);
 }
 
 int Client::count()

@@ -1,12 +1,13 @@
 #include "theme.h"
 #include <iostream>
+#include "log.h"
 
 Theme * Theme::_instance = 0;
 
 Theme::Theme(const char* path)
 {
 	_path = new string(path);
-	cout << "DEBUG: Theme path = " << _path->c_str() << endl;
+	LOG_DEBUG("Theme path = " << _path->c_str());
 
 	// make sure our path ends with a '/'
 	if (_path->at(_path->size()-1) != '/') {

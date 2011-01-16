@@ -13,6 +13,7 @@
 #include "event.h"
 #include "theme.h"
 #include "config_file.h"
+#include "log.h"
 
 using namespace std;
 
@@ -33,13 +34,13 @@ int setupscreen()
 	}
 
 	len = xcb_query_tree_children_length(reply);
-	cout << "DEBUG: found " << len << " windows" << endl;
+	LOG_DEBUG("found " << len << " windows");
 	children = xcb_query_tree_children(reply);
 
 	for (int i = 0; i < len; i++) {
 		attr = xcb_get_window_attributes_reply(conn, xcb_get_window_attributes(conn, children[i]), NULL);
 		if (!attr) {
-			cout << "ERROR: Couldn't get attributes for window " << children[i];
+			LOG_ERROR("Couldn't get attributes for window " << children[i]);
 			continue;
 		}
 
@@ -56,7 +57,7 @@ int setupscreen()
 
 void SignalHandler(int signal_number)
 {
-	cout << "DEBUG: Exiting with signal " << signal_number << endl;
+	LOG_DEBUG("Exiting with signal " << signal_number);
 	bool connectionError = Screen::instance()->connectionError();
 	if (!connectionError) {
 		Screen::instance()->revertBackground();
@@ -102,21 +103,21 @@ int main(int argc, char** argv)
 	signal(SIGSTKFLT, SignalHandler);
 	signal(SIGQUIT, SignalHandler);
 
-	cout << "INFO: Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << "." << GBWM_VERSION_REV << endl;
+	LOG_INFO("Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << "." << GBWM_VERSION_REV);
 
 	// load config file
 	try {
 		string config_file = string(getenv("HOME"));
 		config_file.append("/.gbwmrc");
-		cout << "DEBUG: config_file = " << config_file.c_str() << endl;
+		LOG_DEBUG("config_file = " << config_file.c_str());
 		ConfigFile config(config_file.c_str());
 		
-		cout << "DEBUG: Config file found, loading values" << endl;
+		LOG_DEBUG("Config file found, loading values");
 
 		theme_folder = config.read<string>("theme", "../theme");
 	} catch (ConfigFile::file_not_found &e) {
 		// set up defaults for when there isn't a config file
-		cout << "DEBUG: Config file not found, loading sensible defaults" << endl;
+		LOG_DEBUG("Config file not found, loading sensible defaults");
 		theme_folder = "../theme";
 	}
 
@@ -133,11 +134,11 @@ int main(int argc, char** argv)
 
 	event = new Event();
 	if (event->error()) {
-		cout << "ERROR: Another window manager is running!" << endl;
+		LOG_ERROR("Another window manager is running!");
 		SignalHandler(1);
 	}
 
-	cout << "INFO: Screen size: " << Screen::screen()->width_in_pixels << "x" << Screen::screen()->height_in_pixels << endl;
+	LOG_INFO("Screen size: " << Screen::screen()->width_in_pixels << "x" << Screen::screen()->height_in_pixels);
 	setupscreen();
 	xcb_flush(Screen::conn());
 

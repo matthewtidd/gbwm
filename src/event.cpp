@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "client.h"
 #include "window.h"
+#include "log.h"
 #include <iostream>
 #include <stdlib.h>
 
@@ -13,7 +14,7 @@ extern void SignalHandler(int);
 
 Event::Event()
 {
-	cout << "DEBUG: Event()" << endl;
+	LOG_DEBUG("Event()");
 	_error = false;
 	_buttonPressed = 0;
 	_event = 0;
@@ -68,16 +69,16 @@ void Event::process(xcb_generic_event_t *_event)
 	xcb_window_t win_id = 0;
 	switch (_event->response_type & ~0x80) {
 		case XCB_KEY_PRESS: { // 2
-			cout << _i << ":EVENT: XCB_KEY_PRESS" << endl;
+			LOG_EVENT(_i << ":XCB_KEY_PRESS");
 			xcb_key_press_event_t *kp = (xcb_key_press_event_t *)_event;
 			win_id = kp->event;
 			break;
 		}
 		case XCB_KEY_RELEASE: { // 3
-			cout << _i << ":EVENT: XCB_KEY_RELEASE" << endl;
+			LOG_EVENT(_i << ":XCB_KEY_RELEASE");
 			xcb_key_release_event_t *kr = (xcb_key_release_event_t *)_event;
 			win_id = kr->event;
-			cout << "KEY: " << (int)kr->detail << endl;
+			LOG("KEY: " << (int)kr->detail);
 			// ESC exits
 			if ((int)kr->detail == 9) {
 				SignalHandler(0);
@@ -85,7 +86,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_BUTTON_PRESS: { // 4
-			cout << _i << ":EVENT: XCB_BUTTON_PRESS" << endl;
+			LOG_EVENT(_i << ":XCB_BUTTON_PRESS");
 			xcb_button_press_event_t *bp = (xcb_button_press_event_t *)_event;
 			win_id = bp->event;
 			Window *window = Window::getWindowById(win_id);
@@ -96,7 +97,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_BUTTON_RELEASE: { // 5
-			cout << _i << ":EVENT: XCB_BUTTON_RELEASE" << endl;
+			LOG_EVENT(_i << ":XCB_BUTTON_RELEASE");
 			xcb_button_release_event_t *br = (xcb_button_release_event_t *)_event;
 			win_id = br->event;
 			Window *window = Window::getWindowById(win_id);
@@ -111,7 +112,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_ENTER_NOTIFY: { // 7
-			//cout << _i << ":EVENT: XCB_ENTER_NOTIFY" << endl;
+			//LOG_EVENT(_i << ":XCB_ENTER_NOTIFY");
 			xcb_enter_notify_event_t *en = (xcb_enter_notify_event_t *)_event;
 			win_id = en->event;
 			Window *window = Window::getWindowById(win_id);
@@ -121,7 +122,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_LEAVE_NOTIFY: { // 9
-			//cout << _i << ":EVENT: XCB_LEAVE_NOTIFY" << endl;
+			//LOG_EVENT(_i << ":XCB_LEAVE_NOTIFY");
 			xcb_enter_notify_event_t *le = (xcb_enter_notify_event_t *)_event;
 			win_id = le->event;
 			Window *window = Window::getWindowById(win_id);
@@ -131,7 +132,7 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_EXPOSE: { // 12
-			cout << _i << ":EVENT: XCB_EXPOSE" << endl;
+			LOG_EVENT(_i << ":XCB_EXPOSE");
 			xcb_expose_event_t *ex = (xcb_expose_event_t *)_event;
 			win_id = ex->window;
 			Window *window = Window::getWindowById(win_id);
@@ -145,26 +146,26 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_CREATE_NOTIFY: { // 16
-			cout << _i << ":EVENT: XCB_CREATE_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_CREATE_NOTIFY");
 			xcb_create_notify_event_t *cn = (xcb_create_notify_event_t *)_event;
 			Client *c = Client::getByWindow(cn->window);
 			Window *win = Window::getWindowById(cn->window);
 			if (c) {
-				cout << "EVENT: existing client!" << endl;
+				LOG("EVENT: existing client!");
 				c->debug();
 			} else if (win) {
-				cout << "EVENT: existing window!" << endl;
+				LOG("EVENT: existing window!");
 				win->debug();
 			} else {
-				cout << "EVENT: non-existing client!" << endl;
-				cout << " window : " << cn->window << endl;
-				cout << " parent : " << cn->parent << endl;
-				cout << "      x : " << cn->x << endl;
-				cout << "      y : " << cn->y << endl;
-				cout << "  width : " << cn->width << endl;
-				cout << " height : " << cn->height << endl;
-				cout << " border : " << cn->border_width << endl;
-				cout << "   over : " << (int)cn->override_redirect << endl;
+				LOG("EVENT: non-existing client!");
+				LOG(" window : " << cn->window);
+				LOG(" parent : " << cn->parent);
+				LOG("      x : " << cn->x);
+				LOG("      y : " << cn->y);
+				LOG("  width : " << cn->width);
+				LOG(" height : " << cn->height);
+				LOG(" border : " << cn->border_width);
+				LOG("   over : " << (int)cn->override_redirect);
 				if ((int)cn->override_redirect == 0) {
 					new Client(cn->window);
 				}
@@ -172,30 +173,30 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_DESTROY_NOTIFY: { // 17
-			cout << _i << ":EVENT: XCB_DESTROY_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_DESTROY_NOTIFY");
 			xcb_destroy_notify_event_t *dn = (xcb_destroy_notify_event_t *)_event;
 			Client *c = Client::getByWindow(dn->window);
 			if (c) {
-				cout << "EVENT: DESTROY client" << endl;
+				LOG("EVENT: DESTROY client");
 				Client::destroy(c);
 			}
 		}
 		case XCB_UNMAP_NOTIFY: { // 18
-			cout << _i << ":EVENT: XCB_UNMAP_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_UNMAP_NOTIFY");
 			xcb_map_request_event_t *mr = (xcb_map_request_event_t *)_event;
 			Client *c = Client::getByWindow(mr->window);
 			if (c) {
-				cout << "EVENT: UNMAP client" << endl;
+				LOG("EVENT: UNMAP client");
 				c->unmap();
 			}
 			break;
 		}
 		case XCB_MAP_NOTIFY: { // 19
-			cout << _i << ":EVENT: XCB_MAP_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_MAP_NOTIFY");
 			xcb_map_request_event_t *mr = (xcb_map_request_event_t *)_event;
 			Client *c = Client::getByWindow(mr->window);
 			if (c) {
-				cout << "EVENT: MAP client" << endl;
+				LOG("EVENT: MAP client");
 				c->debug();
 				c->map();
 			}
@@ -206,45 +207,45 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_MAP_REQUEST: { // 20
-			cout << _i << ":EVENT: XCB_MAP_REQUEST" << endl;
+			LOG_EVENT(_i << ":XCB_MAP_REQUEST");
 			// this code is for subwindows
 			xcb_map_notify_event_t *mn = (xcb_map_notify_event_t *)_event;
 			Client *c = Client::getByWindow(mn->window);
 			if (c) {
-				cout << "EVENT: MAP subwindow client" << endl;
+				LOG("EVENT: MAP subwindow client");
 				c->debug();
 				xcb_map_window(Screen::conn(), mn->window);
 				c->map();
 				c->reparent();
 			} else {
-				cout << "EVENT: unknown map request" << endl;
+				LOG("EVENT: unknown map request");
 				xcb_map_window(Screen::conn(), mn->window);
 			}
 			break;
 		}
 		case XCB_REPARENT_NOTIFY: { // 21
-			cout << _i << ":EVENT: XCB_REPARENT_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_REPARENT_NOTIFY");
 			xcb_reparent_notify_event_t *rn = (xcb_reparent_notify_event_t *)_event;
 			Client *c = Client::getByWindow(rn->window);
 			if (c) {
-				cout << "EVENT: REPARENT client" << endl;
+				LOG("EVENT: REPARENT client");
 				c->reparent();
 			}
 			break;
 		}
 		case XCB_CONFIGURE_NOTIFY: { // 22
-			cout << _i << ":EVENT: XCB_CONFIGURE_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_CONFIGURE_NOTIFY");
 			xcb_configure_notify_event_t *cn = (xcb_configure_notify_event_t *)_event;
 			// only handle configure notify requests for root windows
-			cout << "  event : " << cn->event << endl;
-			cout << " window : " << cn->window << endl;
-			cout << "sibling : " << cn->above_sibling << endl;
-			cout << "      x : " << cn->x << endl;
-			cout << "      y : " << cn->y << endl;
-			cout << "  width : " << cn->width << endl;
-			cout << " height : " << cn->height << endl;
-			cout << " border : " << cn->border_width << endl;
-			cout << "   over : " << (int)cn->override_redirect << endl;
+			LOG("  event : " << cn->event);
+			LOG(" window : " << cn->window);
+			LOG("sibling : " << cn->above_sibling);
+			LOG("      x : " << cn->x);
+			LOG("      y : " << cn->y);
+			LOG("  width : " << cn->width);
+			LOG(" height : " << cn->height);
+			LOG(" border : " << cn->border_width);
+			LOG("   over : " << (int)cn->override_redirect);
 			Client *c = Client::getByWindow(cn->window);
 			if (c) {
 				c->debug();
@@ -261,9 +262,9 @@ void Event::process(xcb_generic_event_t *_event)
 			break;
 		}
 		case XCB_CONFIGURE_REQUEST: { // 23
-			cout << _i << ":EVENT: XCB_CONFIGURE_REQUEST" << endl;
+			LOG_EVENT(_i << ":XCB_CONFIGURE_REQUEST");
 			xcb_configure_request_event_t *cr = (xcb_configure_request_event_t *)_event;
-			cout << " window : " << cr->window << endl;
+			LOG(" window : " << cr->window);
 			// configure requests for clients are handled separately
 			Client *c = Client::getByWindow(cr->window);
 			Window *win = Window::getWindowById(cr->window);
@@ -273,7 +274,7 @@ void Event::process(xcb_generic_event_t *_event)
 			} else if (win) {
 				win->debug();
 			} else {
-				cout << "DEBUG: configure_request with out client!" << endl;
+				LOG_DEBUG("configure_request with out client!");
 			}
 			// this is a request to configure a window we don't care about, pass it along to xcb
 			uint16_t config_win_mask = 0;
@@ -283,39 +284,39 @@ void Event::process(xcb_generic_event_t *_event)
 
 			if (cr->value_mask & XCB_CONFIG_WINDOW_X) {
 				config_win_mask |= XCB_CONFIG_WINDOW_X;
-				cout << "      x : " << cr->x << endl;
+				LOG("      x : " << cr->x);
 				config_win_vals[i++] = cr->x;
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_Y) {
 				config_win_mask |= XCB_CONFIG_WINDOW_Y;
 				config_win_vals[i++] = cr->y;
-				cout << "      y : " << cr->y << endl;
+				LOG("      y : " << cr->y);
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_WIDTH) {
 				config_win_mask |= XCB_CONFIG_WINDOW_WIDTH;
 				config_win_vals[i++] = cr->width;
-				cout << "  width : " << cr->width << endl;
+				LOG("  width : " << cr->width);
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
 				config_win_mask |= XCB_CONFIG_WINDOW_HEIGHT;
 				config_win_vals[i++] = cr->height;
-				cout << " height : " << cr->height << endl;
+				LOG(" height : " << cr->height);
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH) {
 				config_win_mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
 				config_win_vals[i++] = cr->border_width;
-				cout << " border : " << cr->border_width << endl;
+				LOG(" border : " << cr->border_width);
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_SIBLING) {
 				config_win_mask |= XCB_CONFIG_WINDOW_SIBLING;
 				config_win_vals[i++] = cr->sibling;
-				cout << "sibling : " << cr->sibling << endl;
+				LOG("sibling : " << cr->sibling);
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_STACK_MODE) {
 				config_win_mask |= XCB_CONFIG_WINDOW_STACK_MODE;
 				config_win_vals[i++] = cr->stack_mode;
 				client_vals[0] = cr->stack_mode;
-				cout << "  stack : " << (int)cr->stack_mode << endl;
+				LOG("  stack : " << (int)cr->stack_mode);
 			}
 			if (c) {
 				xcb_configure_window(Screen::conn(), c->id(), config_win_mask, config_win_vals);
@@ -328,25 +329,25 @@ void Event::process(xcb_generic_event_t *_event)
 				xcb_flush(Screen::conn());
 			}
 			if (cr->value_mask & XCB_CONFIG_WINDOW_STACK_MODE) {
-				cout << "DEBUG: Changing stacking order for window!" << endl;
+				LOG_DEBUG("Changing stacking order for window!");
 				xcb_configure_window(Screen::conn(), c->id(), XCB_CONFIG_WINDOW_STACK_MODE, client_vals);
 			}
 			break;
 		}
 		case XCB_PROPERTY_NOTIFY: { // 28
-			cout << _i << ":EVENT: XCB_PROPERTY_NOTIFY" << endl;
+			LOG_EVENT(_i << ":XCB_PROPERTY_NOTIFY");
 			break;
 		}
 		case XCB_CLIENT_MESSAGE: { // 33
-			cout << _i << ":EVENT: XCB_CLIENT_MESSAGE" << endl;
+			LOG_EVENT(_i << ":XCB_CLIENT_MESSAGE");
 			break;
 		}
 		default:
-			cout << _i << ":EVENT: " << (int)(_event->response_type & ~0x80) << endl;
+			LOG_EVENT(_i << (int)(_event->response_type & ~0x80));
 			break;
 	}
 	if (win_id == Screen::screen()->root) {
-		//cout << "DEBUG: ROOT WINDOW!" << endl;
+		//LOG_DEBUG("ROOT WINDOW!");
 	}
 	if (win_id != 0) {
 		Window *window = Window::getWindowById(win_id);

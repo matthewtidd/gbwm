@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "client.h"
 #include "theme.h"
+#include "log.h"
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 #include <xcb/xcb_icccm.h>
@@ -50,15 +51,15 @@ void Button::mousePress(xcb_button_press_event_t * /*event*/)
 
 void Button::mouseRelease(xcb_button_release_event_t * /*event*/)
 {
-	cout << "button release!!" << endl;
+	LOG_DEBUG("button release!!");
 	if (_active) {
 		switch (_buttonType) {
 			case BUTTON_CLOSE:
-				cout << "DEBUG: Close window." << endl;
+				LOG_DEBUG("Close window");
 				closeAction();
 				break;
 			default:
-				cout << "DEBUG: Unknown button." << endl;
+				LOG_DEBUG("Unknown button");
 		}
 	}
 	mouseCancel();

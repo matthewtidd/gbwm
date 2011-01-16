@@ -5,7 +5,7 @@ set (PROJECT_SOURCE_DIR src)
 
 set (GBWM_VERSION_MAJOR 0)
 set (GBWM_VERSION_MINOR 3)
-set (GBWM_VERSION_REV   1)
+set (GBWM_VERSION_REV   2)
 
 set (CMAKE_CXX_FLAGS "-g -Wall")
 
@@ -21,7 +21,7 @@ find_package (PkgConfig)
 pkg_check_modules (PANGO REQUIRED pangocairo)
 pkg_check_modules (CAIRO REQUIRED cairo)
 
-add_executable (gbwm src/gbwm.cpp src/screen.cpp src/client.cpp src/event.cpp src/window.cpp src/button.cpp src/titlebar.cpp src/config_file.cpp src/theme.cpp)
+add_executable (gbwm src/gbwm.cpp src/screen.cpp src/client.cpp src/event.cpp src/window.cpp src/button.cpp src/titlebar.cpp src/config_file.cpp src/theme.cpp src/log.cpp)
 
 link_directories (${PANGO_LIBRARY_DIRS} ${CAIRO_LIBRARY_DIRS})
 include_directories (${PANGO_INCLUDE_DIRS} ${CAIRO_INCLUDE_DIRS})

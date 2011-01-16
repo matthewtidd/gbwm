@@ -1,5 +1,6 @@
 #include "window.h"
 #include "screen.h"
+#include "log.h"
 
 list<Window *> Window::_windows;
 list<Window *> Window::_rootWindows;
@@ -129,22 +130,22 @@ void Window::mouseCancel()
 
 void Window::debug() const
 {
-	cout << "DEBUG: window = " << _id << endl;
-	//cout << "DEBUG:   x = " << _x << endl;
-	//cout << "DEBUG:   y = " << _y << endl;
-	//cout << "DEBUG:   width = " << _width << endl;
-	//cout << "DEBUG:   height = " << _height << endl;
+	LOG_DEBUG("window = " << _id);
+	//LOG_DEBUG("   x = " << _x);
+	//LOG_DEBUG("   y = " << _y);
+	//LOG_DEBUG("   width = " << _width);
+	//LOG_DEBUG("   height = " << _height);
 	switch(_type) {
 		case WINDOW_TYPE_NONE:
-			cout << "DEBUG:    type = WINDOW" << endl;
+			LOG_DEBUG("    type = WINDOW");
 			break;
 		case WINDOW_TYPE_BUTTON:
-			cout << "DEBUG:    type = BUTTON" << endl;
+			LOG_DEBUG("    type = BUTTON");
 			break;
 		case WINDOW_TYPE_TITLEBAR:
-			cout << "DEBUG:    type = TITLEBAR" << endl;
+			LOG_DEBUG("    type = TITLEBAR");
 			break;
 		default:
-			cout << "DEBUG:    type = UNKNOWN" << endl;
+			LOG_DEBUG("    type = UNKNOWN");
 	}
 }
