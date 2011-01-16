@@ -4,7 +4,7 @@ project (gbwm)
 set (PROJECT_SOURCE_DIR src)
 
 set (GBWM_VERSION_MAJOR 0)
-set (GBWM_VERSION_MINOR 2)
+set (GBWM_VERSION_MINOR 3)
 
 configure_file (
 	"${PROJECT_SOURCE_DIR}/config.h.in"
