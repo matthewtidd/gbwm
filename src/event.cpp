@@ -14,7 +14,6 @@ extern void SignalHandler(int);
 
 Event::Event()
 {
-	LOG_DEBUG("Event()");
 	_error = false;
 	_buttonPressed = 0;
 	_event = 0;

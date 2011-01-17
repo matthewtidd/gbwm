@@ -58,26 +58,30 @@ int setupscreen()
 void SignalHandler(int signal_number)
 {
 	LOG_DEBUG("Exiting with signal " << signal_number);
-	bool connectionError = Screen::instance()->connectionError();
-	if (!connectionError) {
-		Screen::instance()->revertBackground();
+	Screen *screen = Screen::instance();
+	if (screen) {
+		bool connectionError = Screen::instance()->connectionError();
+		if (!connectionError) {
+			Screen::instance()->revertBackground();
+		}
+		list<Client *> clients = Client::clients();
+		list<Client *>::iterator iter;
+		for (iter = clients.begin(); iter != clients.end(); iter++) {
+			Client *c = (Client *)*iter;
+			c->revert();
+			delete(c);
+		}
+		clients.clear();
+		// save this so that we can clean up the Screen instance properly and then disconnect
+		// otherwise the xcb connection isn't valid during ~Screen()
+		xcb_connection_t *conn = Screen::conn();
+		delete(Event::instance());
+		delete(Screen::instance());
+		if (!connectionError) {
+			xcb_disconnect(conn);
+		}
 	}
-	list<Client *> clients = Client::clients();
-	list<Client *>::iterator iter;
-	for (iter = clients.begin(); iter != clients.end(); iter++) {
-		Client *c = (Client *)*iter;
-		c->revert();
-		delete(c);
-	}
-	clients.clear();
-	// save this so that we can clean up the Screen instance properly and then disconnect
-	// otherwise the xcb connection isn't valid during ~Screen()
-	xcb_connection_t *conn = Screen::conn();
-	delete(Event::instance());
-	delete(Screen::instance());
-	if (!connectionError) {
-		xcb_disconnect(conn);
-	}
+	Log::closeLogFile();
 	exit(signal_number);
 }
 
@@ -88,6 +92,11 @@ int main(int argc, char** argv)
 
 	// config file defaults
 	string theme_folder;
+	string log;
+	string log_file;
+	string config_file;
+	string log_level;
+	bool config_file_found = false;
 
 	// SIGNALS
 	signal(SIGALRM, SignalHandler);
@@ -103,22 +112,45 @@ int main(int argc, char** argv)
 	signal(SIGSTKFLT, SignalHandler);
 	signal(SIGQUIT, SignalHandler);
 
-	LOG_INFO("Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << "." << GBWM_VERSION_REV);
+	Log::setLogFile(string("log.txt"));
 
 	// load config file
 	try {
-		string config_file = string(getenv("HOME"));
+		config_file = string(getenv("HOME"));
 		config_file.append("/.gbwmrc");
-		LOG_DEBUG("config_file = " << config_file.c_str());
 		ConfigFile config(config_file.c_str());
-		
-		LOG_DEBUG("Config file found, loading values");
-
+		config_file_found = true;
 		theme_folder = config.read<string>("theme", "../theme");
+		log = config.read<string>("log", "screen");
+		log_file = config.read<string>("log_file", "gbwm.log");
+		log_level = config.read<string>("log_level", "debug");
 	} catch (ConfigFile::file_not_found &e) {
 		// set up defaults for when there isn't a config file
 		LOG_DEBUG("Config file not found, loading sensible defaults");
 		theme_folder = "../theme";
+		log = "screen";
+		log_level = "debug";
+	}
+
+	// log stuff
+	Log::setLogLevel(log_level);
+	if (log == "file") {
+		Log::setLogFile(log_file);
+	} else {
+		Log::setLogFile("");
+	}
+
+	LOG_INFO("GBWM Version: " << GBWM_VERSION_MAJOR << "." << GBWM_VERSION_MINOR << "." << GBWM_VERSION_REV);
+
+	if (config_file_found) {
+		LOG_DEBUG("Config file = " << config_file.c_str());
+	}
+
+	if (log == "file") {
+		LOG_DEBUG("Logging set to file");
+		LOG_DEBUG("Log file = " << log_file.c_str());
+	} else {
+		LOG_DEBUG("Logging set to screen");
 	}
 
 	if (argc == 2) {
