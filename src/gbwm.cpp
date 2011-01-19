@@ -47,6 +47,7 @@ int setupscreen()
 		if (!attr->override_redirect && attr->map_state == XCB_MAP_STATE_VIEWABLE) {
 			Client *c = new Client(children[i]);
 			c->map();
+			c->reparent();
 		}
 		free(attr);
 	}

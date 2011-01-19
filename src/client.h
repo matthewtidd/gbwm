@@ -34,8 +34,9 @@ class Client {
 		void map();
 		void unmap();
 		void reparent();  // used to set the reparented flag from an X event after we called reparent
-		xcb_drawable_t id();
+		void updateTitle(const char *str);
 
+		xcb_drawable_t id();
 		xcb_window_t window() const;
 
 	private:
@@ -53,7 +54,6 @@ class Client {
 		Titlebar *_titlebar;
 		Window *_frame;
 		Button *_closeButton;
-		string *_title;
 
 		void setupTitlebar();
 		void setupFrame();

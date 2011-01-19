@@ -1,4 +1,17 @@
 # config file for gbwm
 
 # location of theme folder
+# defaut = ../theme
 theme = ~/.gbwm/theme
+
+# where to log output (screen or file)
+# default = screen
+log = screen
+
+# location of log file (log = file)
+# default = gbwm.log
+log_file = gbwm.log
+
+# level of logging (debug, info, error)
+# default = debug
+log_level = debug

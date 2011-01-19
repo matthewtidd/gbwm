@@ -58,20 +58,6 @@ Client::Client(xcb_window_t win)
 		_min_height = hints.min_height;
 	}
 
-	// TITLE
-	xcb_get_text_property_reply_t prop;
-	xcb_get_property_cookie_t cookie = xcb_get_wm_name(_conn, _id);
-	uint8_t got_reply;
-	got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
-	if (!got_reply || prop.name_len == 0) {
-		LOG_ERROR("No name for client");
-		_title = new string("(none)");
-	} else {
-		LOG_DEBUG("Client name = " << prop.name);
-		_title = new string(prop.name);
-	}
-	xcb_get_text_property_reply_wipe(&prop);
-
 	setupFrame();
 	setupTitlebar();
 	debug();
@@ -89,9 +75,6 @@ Client::~Client()
 	}
 	if (_frame) {
 		delete(_frame);
-	}
-	if (_title) {
-		delete(_title);
 	}
 	_clients.remove(this);
 }
@@ -169,14 +152,22 @@ void Client::reparent()
 	if (!_reparented) {
 		_reparented = true;
 		const uint32_t win_vals[] = {
-			XCB_EVENT_MASK_PROPERTY_CHANGE |
-			XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
+			XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
+			XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
+			XCB_EVENT_MASK_ENTER_WINDOW | XCB_EVENT_MASK_LEAVE_WINDOW |
+			XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+			XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
 			XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
 		};
 		xcb_change_window_attributes(Screen::conn(), _id, XCB_CW_EVENT_MASK, win_vals);
 	} else {
 		LOG_ERROR("Call to client reparent that was already done!");
 	}
+}
+
+void Client::updateTitle(const char *str)
+{
+	_titlebar->setText(str);
 }
 
 xcb_drawable_t Client::id()
@@ -217,7 +208,19 @@ void Client::setupTitlebar()
 	uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
 	uint32_t values[2] = {_screen->white_pixel, XCB_EVENT_MASK_EXPOSURE};
 
-	_titlebar = new Titlebar(_title->c_str(), _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
+	// TITLE
+	xcb_get_text_property_reply_t prop;
+	xcb_get_property_cookie_t cookie = xcb_get_wm_name(_conn, _id);
+	uint8_t got_reply;
+	got_reply = xcb_get_wm_name_reply(_conn, cookie, &prop, NULL);
+	if (!got_reply || prop.name_len == 0) {
+		LOG_ERROR("No name for client");
+		_titlebar = new Titlebar("", _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
+	} else {
+		LOG_DEBUG("Client name = " << prop.name);
+		_titlebar = new Titlebar(prop.name, _frame, 0, 0, _width, CLIENT_TITLEBAR_HEIGHT, 0, mask, values);
+	}
+	xcb_get_text_property_reply_wipe(&prop);
 
 	_closeButton = new Button(this, BUTTON_CLOSE, _titlebar, _width - 1 - 12, 1, 12, 12, 0, mask, values);
 	xcb_flush(_conn);

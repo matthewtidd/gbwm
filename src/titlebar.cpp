@@ -1,6 +1,7 @@
 #include "titlebar.h"
 #include "screen.h"
 #include "client.h"
+#include "log.h"
 
 Titlebar::Titlebar(const char* txt, Window *parent, int x, int y, int w, int h, int border, uint32_t mask, const uint32_t *values) :
 	Window(parent, x, y, w, h, border, mask, values)
@@ -18,6 +19,7 @@ void Titlebar::draw()
 	// fill the background
 	cairo_surface_t *surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
 	cairo_t *cr = cairo_create(surface);
+
 	cairo_rectangle(cr, 0, 0, width(), height());
 	cairo_set_source_rgb(cr, 0.9, 0.9, 0.9);
 	cairo_fill(cr);
@@ -26,27 +28,24 @@ void Titlebar::draw()
 	cairo_move_to(cr, 0.0, height());
 	cairo_line_to(cr, width(), height());
 	cairo_stroke(cr);
-	cairo_destroy(cr);
-	cairo_surface_destroy(surface);
+
 
 	// draw the text
-	cairo_surface_t *text_surface = cairo_xcb_surface_create(Screen::conn(), id(), Screen::visual(), width(), height());
-	cairo_t *cr2 = cairo_create(text_surface);
-
 	// nice couple pixel padding between the text and the edge
-	cairo_move_to(cr2, 2, 2);
+	cairo_move_to(cr, 2, 2);
 	
-	PangoLayout *layout = pango_cairo_create_layout(cr2);
-	pango_layout_set_text(layout, _text.c_str(), -1);
+	PangoLayout *layout = pango_cairo_create_layout(cr);
+	pango_layout_set_text(layout, _text.c_str(), _text.size());
 	PangoFontDescription *font_description = pango_font_description_from_string(CLIENT_TITLEBAR_FONT);
 	pango_layout_set_font_description(layout, font_description);
 	pango_font_description_free(font_description);
-	cairo_set_source_rgb(cr2, 0.1, 0.1, 0.1);
-	pango_cairo_show_layout(cr2, layout);
+	cairo_set_source_rgb(cr, 0.1, 0.1, 0.1);
+	pango_cairo_show_layout(cr, layout);
 	g_object_unref(layout);
-	cairo_destroy(cr2);
 
-	cairo_surface_destroy(text_surface);
+	cairo_destroy(cr);
+	cairo_surface_destroy(surface);
+	xcb_flush(Screen::conn());
 }
 
 void Titlebar::setText(const char *txt)
