@@ -99,6 +99,26 @@ bool Event::error()
 	return(_error);
 }
 
+char * Event::getPropertyTextFromReply(xcb_get_property_reply_t *reply)
+{
+	if(reply
+		 && (reply->type == STRING
+				 || reply->type == xcb_atom_get(Screen::conn(), "UTF8_STRING")
+				 || reply->type == xcb_atom_get(Screen::conn(), "COMPOUND_TEXT"))
+		 && reply->format == 8
+		 && xcb_get_property_value_length(reply))
+	{
+			/* We need to copy it that way since the string may not be
+			 * NULL-terminated */
+			int len = xcb_get_property_value_length(reply);
+			char *value = (char *)malloc(sizeof(char) * (len + 1));
+			memcpy(value, xcb_get_property_value(reply), len);
+			value[len] = '\0';
+			return value;
+	}
+	return NULL;
+}
+
 int Event::handle_keypress(void *p, xcb_connection_t *conn, xcb_key_press_event_t *e)
 {
 	LOG_EVENT(_i << ":XCB_KEY_PRESS");
@@ -444,8 +464,7 @@ int Event::_handle_property_wmname(void *p, xcb_connection_t *conn, uint8_t stat
 	LOG_EVENT("property WM_NAME");
 	Client *c = Client::getByWindow(window);
 	if (c) {
-		char *title = xutil_get_text_property_from_reply(reply);
-		c->updateTitle(xutil_get_text_property_from_reply(reply));
+		c->updateTitle(getPropertyTextFromReply(reply));
 	}
 	return(0);
 }

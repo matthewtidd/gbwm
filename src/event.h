@@ -30,6 +30,8 @@ class Event {
 
 		static Event *_instance;
 
+		static char * getPropertyTextFromReply(xcb_get_property_reply_t *reply);
+
 		int handle_keypress(void *p, xcb_connection_t *conn, xcb_key_press_event_t *e);
 		int handle_keyrelease(void *p, xcb_connection_t *conn, xcb_key_release_event_t *e);
 		int handle_buttonpress(void *p, xcb_connection_t *conn, xcb_button_press_event_t *e);
@@ -72,26 +74,5 @@ class Event {
 		//static int _handle_property_netwmname(void *p, xcb_connection_t *conn, uint8_t state, xcb_window_t window, xcb_atom_t atom, xcb_get_property_reply_t *reply);
 
 };
-
-static inline char *
-xutil_get_text_property_from_reply(xcb_get_property_reply_t *reply)
-{
-    if(reply
-       && (reply->type == STRING
-           || reply->type == xcb_atom_get(Screen::conn(), "UTF8_STRING")
-           || reply->type == xcb_atom_get(Screen::conn(), "COMPOUND_TEXT"))
-       && reply->format == 8
-       && xcb_get_property_value_length(reply))
-    {
-        /* We need to copy it that way since the string may not be
-         * NULL-terminated */
-        int len = xcb_get_property_value_length(reply);
-        char *value = (char *)malloc(sizeof(char) * (len + 1));
-        memcpy(value, xcb_get_property_value(reply), len);
-        value[len] = '\0';
-        return value;
-    }
-    return NULL;
-}
 
 #endif // __EVENT_H__
