@@ -5,7 +5,7 @@ set (PROJECT_SOURCE_DIR src)
 
 set (GBWM_VERSION_MAJOR 0)
 set (GBWM_VERSION_MINOR 3)
-set (GBWM_VERSION_REV   2)
+set (GBWM_VERSION_REV   3)
 
 set (CMAKE_CXX_FLAGS "-g -Wall")
 
